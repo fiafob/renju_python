@@ -1,5 +1,9 @@
 import pygame
 
+SIZE = WIDTH, HEIGHT = 930, 780
+RC = 14  # renju_cells
+COLOR = pygame.Color(200, 170, 0)
+
 
 # Очень сырой вариант : крестики-нолики вместо фишек // поле накладывается одно поверх другого
 # какие-то границы есть стремные.
@@ -26,7 +30,19 @@ class Board:
 
     def render(self, screen):
         # k - коэффицент толщины рамки
-        k = 2
+        k = 3
+
+        size = width, height = self.get_size()
+        # Полупрозрачный квадрат, будет работать до 3 хода, помогает понять, где ходить
+        color = pygame.Color(200, 170, 0)
+        hsv = color.hsva
+        color.hsva = (int(hsv[0]), int(hsv[1]), int(hsv[2]) - 60, int(hsv[3]))
+        pygame.draw.rect(screen, color, (((width // 2) - 2.5 * self.cell_size + self.left,
+                                          (height // 2) - 2.5 * self.cell_size + self.top),
+                                         (self.cell_size * 5, self.cell_size * 5)))
+
+        # само поле
+        # cx, cy - count подсчитвыает текущее расположение ряда/колонны
         cy = self.top
         for row in self.board:
             cx = self.left
@@ -53,10 +69,34 @@ class Board:
                 elif elem == 2:
                     pygame.draw.circle(screen, (255, 0, 0),
                                        (cx + 0.5 * self.cell_size + k, cy + 0.5 * self.cell_size + k),
-                                        self.cell_size // 2 - 2 * k, width=k)
+                                       self.cell_size // 2 - 2 * k, width=k)
 
                 cx += self.cell_size
             cy += self.cell_size
+
+        # 4 точки, пока не знаю для чего они
+        for k in range(1, 9, 7):
+            pygame.draw.circle(screen, COLOR, (3 * self.cell_size + self.left + 1,
+                                               (3 + k) * self.cell_size + self.top + 1), 8)
+            pygame.draw.circle(screen, COLOR, (self.get_size()[0] + self.left - self.cell_size * 3 + 1,
+                                               (3 + k) * self.cell_size + self.top + 1), 8)
+
+    # Возможно это в итоге не пригодится, но сейчас это нужно чтобы понимать как работает игра
+    # Отображает цифры и буквы
+    def nums_letts(self, screen):
+        font = pygame.font.Font(None, 2 * RC)
+        for number in range(1, 16):
+            text = font.render(str(number), True, pygame.Color(200, 170, 0))
+            screen.blit(text, (2 * self.left + self.get_size()[0],
+                               0.5 * self.top + (number - 1) * self.cell_size))
+
+        letters = "ABCDEFGHIJKLMNO"
+        for n in range(15):
+            text = font.render(letters[n], True, COLOR)
+            screen.blit(text, (5 + n * self.cell_size, 2 * self.top + self.get_size()[1]))
+#############################################################################################
+#############################################################################################
+#############################################################################################
 
     # тут поменять надо чуть-чуть, чтобы "клеткой" называлось перекрестие, а не пустое пространство
     def get_cell(self, mouse_pos):
@@ -81,3 +121,7 @@ class Board:
 
         cell = self.get_cell(mouse_pos)
         self.on_click(cell)
+
+    # возвращает размер доски
+    def get_size(self):
+        return self.cell_size * self.width, self.cell_size * self.height

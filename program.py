@@ -5,7 +5,7 @@ import pygame as pg
 from classes import Board
 
 SIZE = WIDTH, HEIGHT = 930, 780
-RC = 15  # renju_cells
+RC = 14  # renju_cells
 
 
 def main():
@@ -17,7 +17,8 @@ def main():
 
     # Доска | RC - количество клеток в рэндзю
     board = Board(RC, RC)
-    board.set_view(RC, RC, (HEIGHT - RC * 2) // RC)
+    board.set_view(RC, 5, (HEIGHT - RC * 2) // RC)
+    print(RC, (HEIGHT - RC * 2) // RC)
 
     while game_running:
         renju_screen.fill((0, 0, 0))
@@ -31,6 +32,7 @@ def main():
                 ...
 
         board.render(renju_screen)
+        board.nums_letts(renju_screen)
         pg.display.flip()
     pg.quit()
 
