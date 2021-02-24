@@ -1,4 +1,5 @@
 # Короче, тут будет сама игра, а классы в отдельном файле наверно
+# Еще надо добавить кнопку сдроса доски / счеткик каждого из игроков
 import pygame as pg
 
 from classes import Board
@@ -14,7 +15,7 @@ def main():
     renju_screen = pg.display.set_mode(SIZE)
     game_running = True
 
-    # Доска | 15 - количество клеток в рэндзю
+    # Доска | RC - количество клеток в рэндзю
     board = Board(RC, RC)
     board.set_view(RC, RC, (HEIGHT - RC * 2) // RC)
 
@@ -24,8 +25,8 @@ def main():
             if event.type == pg.QUIT:
                 game_running = False
 
-        # Обработать двойное нажатие левой кнопки
-            if event.type == pg.MOUSEBUTTONUP:
+        # Надо обработать двойное нажатие левой кнопки
+            if event.type == pg.MOUSEBUTTONUP and event.button == 1:
                 board.get_click(event.pos)
                 ...
 

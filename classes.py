@@ -25,21 +25,24 @@ class Board:
         self.cell_size = cell_size
 
     def render(self, screen):
+        # k - коэффицент толщины рамки
         k = 2
         cy = self.top
         for row in self.board:
             cx = self.left
             for elem in row:
-                color = pygame.Color(220, 200, 0)
+                color = pygame.Color(200, 170, 0)
                 pygame.draw.rect(screen, color,
                                  ((cx, cy),
                                   (self.cell_size, self.cell_size)), width=k)
+                # тут затемняется рамка
                 hsv = color.hsva
                 color.hsva = (int(hsv[0]), int(hsv[1]), int(hsv[2] - 30), int(hsv[3]))
                 pygame.draw.rect(screen, color,
                                  ((cx + k, cy + k),
                                   (self.cell_size, self.cell_size)), width=k)
 
+                # На это пока забить можно, это фигура хода в общем
                 if elem == 1:
                     pygame.draw.line(screen, (0, 0, 255),
                                      (cx + 3 * k, cy + 3 * k),
@@ -55,6 +58,7 @@ class Board:
                 cx += self.cell_size
             cy += self.cell_size
 
+    # тут поменять надо чуть-чуть, чтобы "клеткой" называлось перекрестие, а не пустое пространство
     def get_cell(self, mouse_pos):
         if (mouse_pos[0] in range(self.left, self.left + self.width * self.cell_size)) and \
                 (mouse_pos[1] in range(self.top, self.top + self.height * self.cell_size)):
@@ -63,6 +67,7 @@ class Board:
         else:
             return None
 
+    # обрабатывает что делать при нажатии
     def on_click(self, cell_coords):
         if cell_coords is not None:
             if self.board[cell_coords[1]][cell_coords[0]] == 0:
@@ -71,6 +76,7 @@ class Board:
 
         print(cell_coords)
 
+    # функция для основной программы можно сказать, чтобы сразу срабатывало
     def get_click(self, mouse_pos):
 
         cell = self.get_cell(mouse_pos)
