@@ -5,6 +5,7 @@ import pygame
 SIZE = WIDTH, HEIGHT = 1000, 780
 RC = 15  # renju_cells
 COLOR = pygame.Color(200, 170, 0)
+FONT = 'data/font/ARCADECLASSIC.TTF'
 
 
 # Очень сырой вариант : крестики-нолики вместо фишек // поле накладывается одно поверх другого
@@ -93,7 +94,7 @@ class Board:
     # Возможно это в итоге не пригодится, но сейчас это нужно чтобы понимать как работает игра
     # Отображает цифры и буквы
     def nums_letts(self, screen):
-        font = pygame.font.Font(None, 2 * RC)
+        font = pygame.font.Font(FONT, 2 * RC)
         for number in range(1, RC + 1):
             text = font.render(str(number), True, COLOR)
             screen.blit(text, (2 * self.left + self.rvx,
