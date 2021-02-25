@@ -2,7 +2,7 @@ import random
 
 import pygame
 
-SIZE = WIDTH, HEIGHT = 930, 780
+SIZE = WIDTH, HEIGHT = 1000, 780
 RC = 15  # renju_cells
 COLOR = pygame.Color(200, 170, 0)
 
@@ -41,6 +41,7 @@ class Board:
         k = 3
 
         size = width, height = self.get_size()
+
         # Полупрозрачный квадрат, будет работать до 3 хода, помогает понять, где ходить
         color = pygame.Color(200, 170, 0)
         hsv = color.hsva
@@ -142,20 +143,58 @@ class Board:
 #########################################################################
 
 # класс представляет задний фон из точек, который напоминает мерцающие звезды
-class BackgroundBlick:
+class BackgroundBlink:
     def __init__(self, stars):
         self.stars = stars
-        self.positions = [(random.randrange(WIDTH), random.randrange(HEIGHT)) for _ in range(stars)]
-        print(self.positions)
-        self.clock = pygame.time.Clock()
 
-    # хотелось бы, чтобы звезды исчезали и появлялись снова каждые 6 секунд
+        # случайное расположение звезд
+        self.positions = [(random.randrange(WIDTH), random.randrange(HEIGHT)) for _ in range(stars)]
+
+        # переменная, из-за которой звезды затухают
+        self.darkness = 0
+
+    # создаю поверхность с звездами, потому что прозрачность можно менять у поверхностей
     def show_stars(self, screen):
-        for darkness in range(100):
-            for star in self.positions:
-                color = pygame.Color(255, 255, 255)
-                hsv = color.hsva
-                print(hsv[2] - darkness)
-                color.hsva = (hsv[0], hsv[1], hsv[2] - darkness, hsv[3])
-                pygame.draw.rect(screen, color, (star, (2, 2)))
-            self.clock.tick()
+        surf = pygame.Surface(SIZE, pygame.SRCALPHA)
+        counter = 0
+        k = 3
+        for x, y in self.positions:
+            color = pygame.Color(255, 255, 255, 200 - self.darkness)
+            # Отображение разных звезд
+
+            # простой плюсик
+            if counter == 0:
+                pygame.draw.line(surf, color, (x - k - 1, y), (x + k + 1, y), width=k)
+                pygame.draw.line(surf, color, (x, y - k - 1), (x, y + k + 1), width=k)
+            # перекрестие
+            elif counter == 1:
+                for kk in range(-k, k + 1, k):
+                    pygame.draw.rect(surf, color, ((x + kk, y + kk), (k, k)), border_radius=1)
+                    pygame.draw.rect(surf, color, ((x + kk, y - kk), (k, k)), border_radius=1)
+                pygame.draw.rect(surf, color, ((x, y), (k, k)), border_radius=1)
+            # ромб
+            elif counter == 2:
+                kk = 4
+                for w in range(3):
+                    kk = 4 if kk == 2 else 2
+                    for q in range(kk):
+                        z = 1 if q % 2 == 0 else -1
+                        if q > 1:
+                            pygame.draw.rect(surf, color, ((x + z * (2 - w) * k, y + z * w * k),
+                                                           (k, k)), border_radius=1)
+                        else:
+                            pygame.draw.rect(surf, color, ((x + z * (2 - w) * k, y - z * w * k),
+                                                           (k, k)), border_radius=1)
+
+            counter = (counter + 1) % 3
+        screen.blit(surf, (0, 0))
+
+    # функция вызывается так, чтобы за 6 секунд звезда потухла
+    def change_darkness(self):
+        if self.darkness < 200:
+            self.darkness += 1
+
+    # функция обновляется каждые 6 секунд, меняя расположение звезд
+    def update(self):
+        self.darkness = 0
+        self.positions = [(random.randrange(WIDTH), random.randrange(HEIGHT)) for _ in range(self.stars)]
