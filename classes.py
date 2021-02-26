@@ -47,6 +47,7 @@ class Board:
 
         self.help_rect(screen)
         self.nums_letts(screen)
+        self.hud(screen)
 
         # само поле
         surf = pygame.Surface(SIZE, pygame.SRCALPHA)
@@ -66,22 +67,21 @@ class Board:
                     pygame.draw.line(screen, color, (self.left, cy + shadow_k * k),
                                      (self.rvx + self.left, cy + k * shadow_k), width=k)
 
-                cross_x = self.cell_size * row.index(elem)
-                cross_y = self.cell_size * self.board.index(row)
+                cross_x = cx - self.left
+                cross_y = cy - self.top
                 if elem == 1:
                     pygame.draw.circle(surf, (0, 0, 255),
-                                       (cross_x + 0.5 * self.cell_size + k,
-                                        cross_y + 0.5 * self.cell_size + k),
-                                       self.cell_size // 2 - 2 * k)
+                                       (cross_x + 0.5 * self.cell_size + k - 1,
+                                        cross_y + 0.5 * self.cell_size + k - 1),
+                                       self.cell_size // 2 - k)
                 elif elem == 2:
                     pygame.draw.circle(surf, (255, 0, 0),
-                                       (cross_x + 0.5 * self.cell_size + k,
-                                        cross_y + 0.5 * self.cell_size + k),
-                                       self.cell_size // 2 - 2 * k)
+                                       (cross_x + 0.5 * self.cell_size + k - 1,
+                                        cross_y + 0.5 * self.cell_size + k - 1),
+                                       self.cell_size // 2 - k)
 
                 cx += self.cell_size
             cy += self.cell_size
-
         # 4 точки, пока не знаю для чего они
         for k in range(1, 9, 7):
             pygame.draw.circle(screen, COLOR, (3 * self.cell_size + self.left + 1,
@@ -124,6 +124,18 @@ class Board:
             text = font.render(letters[n], True, COLOR)
             screen.blit(text, (self.left // 1.5 + n * self.cell_size,
                                2 * self.top + self.rvy))
+
+    def hud(self, screen):
+        if self.turn == 1:
+            pygame.draw.circle(screen, (0, 0, 255),
+                               (self.get_size()[0] + 3 * self.cell_size,
+                                self.top + self.cell_size),
+                               self.cell_size)
+        else:
+            pygame.draw.circle(screen, (255, 0, 0),
+                               (self.get_size()[0] + 3 * self.cell_size,
+                                self.top + self.cell_size),
+                               self.cell_size)
 
     #############################################################################################
     #############################################################################################
@@ -178,7 +190,10 @@ class BackgroundBlink:
         self.positions = [(random.randrange(WIDTH), random.randrange(HEIGHT)) for _ in range(stars)]
 
         # переменная, из-за которой звезды затухают
-        self.darkness = 0
+        self.darkness = 200
+
+        # Определяет будет ли затухать звезда или появляться
+        self.get_darker = False
 
     # создаю поверхность с звездами, потому что прозрачность можно менять у поверхностей
     def show_stars(self, screen):
@@ -218,10 +233,16 @@ class BackgroundBlink:
 
     # функция вызывается так, чтобы за 6 секунд звезда потухла
     def change_darkness(self):
-        if self.darkness < 200:
+        if self.darkness < 200 and self.get_darker:
             self.darkness += 1
+        elif self.darkness > 0 and not self.get_darker:
+            self.darkness -= 1
+        elif self.darkness == 200:
+            self.get_darker = False
+        else:
+            self.get_darker = True
 
-    # функция обновляется каждые 6 секунд, меняя расположение звезд
+    # функция обновляется каждые 12 секунд, меняя расположение звезд
     def update(self):
-        self.darkness = 0
+        self.darkness = 200
         self.positions = [(random.randrange(WIDTH), random.randrange(HEIGHT)) for _ in range(self.stars)]

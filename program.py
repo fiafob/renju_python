@@ -28,7 +28,7 @@ def main():
     board.set_view(cell_size // 2, cell_size // 2, (HEIGHT - cell_size) // RC)
 
     bg = BackgroundBlink(50)
-    pg.time.set_timer(CHANGE_BACKGROUND, 6000)
+    pg.time.set_timer(CHANGE_BACKGROUND, 12000)
     pg.time.set_timer(DARKNESS_TICK, 6000 // 200)
 
     while game_running:
