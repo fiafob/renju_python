@@ -2,9 +2,9 @@ import random
 
 import pygame
 
-SIZE = WIDTH, HEIGHT = 1000, 780
+SIZE = WIDTH, HEIGHT = 1000, 630
 RC = 15  # renju_cells
-COLOR = pygame.Color(200, 170, 0)
+COLOR = pygame.Color(200, 170, 0)  # тот оранжевый цвет
 FONT = 'data/font/ARCADECLASSIC.TTF'
 
 
@@ -23,7 +23,11 @@ class Board:
         self.top = 10
         self.cell_size = 30
 
+        # turn - определяет кто сейчас ходит
+        # p1 | p2 - player1 | player2 - сколько ходов сделал игрок
         self.turn = 1
+        self.p1 = 0
+        self.p2 = 0
 
         # rv - right version
         self.rvx, self.rvy = self.get_size()[0] - self.cell_size, self.get_size()[1] - self.cell_size
@@ -41,15 +45,8 @@ class Board:
         # k - коэффицент толщины рамки
         k = 3
 
-        size = width, height = self.get_size()
-
-        # Полупрозрачный квадрат, будет работать до 3 хода, помогает понять, где ходить
-        color = pygame.Color(200, 170, 0)
-        hsv = color.hsva
-        color.hsva = (int(hsv[0]), int(hsv[1]), int(hsv[2]) - 60, int(hsv[3]))
-        pygame.draw.rect(screen, color, (((width // 2) - 3 * self.cell_size + self.left,
-                                          (height // 2) - 3 * self.cell_size + self.top),
-                                         (self.cell_size * 5, self.cell_size * 5)))
+        self.help_rect(screen)
+        self.nums_letts(screen)
 
         # само поле
         # cx, cy - count подсчитвыает текущее расположение ряда/колонны
@@ -91,6 +88,22 @@ class Board:
             pygame.draw.circle(screen, COLOR, (self.get_size()[0] + self.left - self.cell_size * 4 + 1,
                                                (3 + k) * self.cell_size + self.top + 1), 8)
 
+    # Полупрозрачный квадрат, будет работать до 3 хода, помогает понять, где ходить
+    def help_rect(self, screen):
+        surf = pygame.surface.Surface(SIZE, pygame.SRCALPHA)
+        width, height = self.get_size()
+        color = pygame.Color(200, 170, 0, 50)
+        # p1 + p2 - общее количество ходов
+        if self.p1 + self.p2 == 0:
+            pygame.draw.rect(surf, color, ((((width - 2 * self.cell_size) // 2) + self.left,
+                                            ((height - 2 * self.cell_size) // 2) + self.top),
+                                           (self.cell_size, self.cell_size)))
+        elif self.p1 + self.p2 == 1:
+            pygame.draw.rect(surf, color, (((width // 2) + self.left,
+                                            (height // 2) + self.top),
+                                           (self.cell_size, self.cell_size)))
+        screen.blit(surf, (0, 0))
+
     # Возможно это в итоге не пригодится, но сейчас это нужно чтобы понимать как работает игра
     # Отображает цифры и буквы
     def nums_letts(self, screen):
@@ -103,13 +116,15 @@ class Board:
         letters = "ABCDEFGHIJKLMNO"
         for n in range(RC):
             text = font.render(letters[n], True, COLOR)
-            screen.blit(text, (self.left // 2 + n * self.cell_size,
+            screen.blit(text, (self.left // 1.5 + n * self.cell_size,
                                2 * self.top + self.rvy))
-#############################################################################################
-#############################################################################################
+
+    #############################################################################################
+    #############################################################################################
 
     # тут поменять надо чуть-чуть, чтобы "клеткой" называлось перекрестие, а не пустое пространство
     def get_cell(self, mouse_pos):
+        # она определяет точку в поле 16x16, где одна клетка является переврестием
         if (mouse_pos[0] in range(self.left, self.left + self.width * self.cell_size)) and \
                 (mouse_pos[1] in range(self.top, self.top + self.height * self.cell_size)):
             return ((mouse_pos[0] - self.left) // self.cell_size,
@@ -121,6 +136,11 @@ class Board:
     def on_click(self, cell_coords):
         if cell_coords is not None:
             if self.board[cell_coords[1]][cell_coords[0]] == 0:
+                if self.turn == 1:
+                    self.p1 += 1
+                elif self.turn == 2:
+                    self.p2 += 1
+                # если поле пустое, ему передается значение игрока, который ходит
                 self.board[cell_coords[1]][cell_coords[0]] = self.turn
                 self.turn = self.turn % 2 + 1
 
@@ -132,9 +152,9 @@ class Board:
         cell = self.get_cell(mouse_pos)
         self.on_click(cell)
 
-########################################################################
+    ########################################################################
 
-    # возвращает размер доски
+    # возвращает размер доски в пикселях
     def get_size(self):
         return self.cell_size * self.width, self.cell_size * self.height
 
