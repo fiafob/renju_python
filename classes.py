@@ -66,17 +66,16 @@ class Board:
                                      (self.rvx + self.left, cy + k * shadow_k), width=k)
 
                 # На это пока забить можно, это фигура хода в общем
+                cross_x = (cx - self.left)
+                cross_y = (cy - self.top)
                 if elem == 1:
-                    pygame.draw.line(screen, (0, 0, 255),
-                                     (cx + 3 * k, cy + 3 * k),
-                                     (cx + self.cell_size - 3 * k, cy + self.cell_size - 3 * k), width=k)
-                    pygame.draw.line(screen, (0, 0, 255),
-                                     (cx + self.cell_size - 3 * k, cy + 3 * k),
-                                     (cx + 3 * k, cy + self.cell_size - 3 * k), width=k)
+                    pygame.draw.circle(screen, (0, 0, 255),
+                                       (cross_x + 0.5 * self.cell_size + k, cross_y + 0.5 * self.cell_size + k),
+                                       self.cell_size // 2 - 2 * k)
                 elif elem == 2:
                     pygame.draw.circle(screen, (255, 0, 0),
-                                       (cx + 0.5 * self.cell_size + k, cy + 0.5 * self.cell_size + k),
-                                       self.cell_size // 2 - 2 * k, width=k)
+                                       (cross_x + 0.5 * self.cell_size + k, cross_y + 0.5 * self.cell_size + k),
+                                       self.cell_size // 2 - 2 * k)
 
                 cx += self.cell_size
             cy += self.cell_size
@@ -125,10 +124,12 @@ class Board:
     # тут поменять надо чуть-чуть, чтобы "клеткой" называлось перекрестие, а не пустое пространство
     def get_cell(self, mouse_pos):
         # она определяет точку в поле 16x16, где одна клетка является переврестием
-        if (mouse_pos[0] in range(self.left, self.left + self.width * self.cell_size)) and \
-                (mouse_pos[1] in range(self.top, self.top + self.height * self.cell_size)):
-            return ((mouse_pos[0] - self.left) // self.cell_size,
-                    (mouse_pos[1] - self.top) // self.cell_size)
+        if (mouse_pos[0] in range(0, self.width * (self.cell_size + 1))) and \
+                (mouse_pos[1] in range(0, self.height * (self.cell_size + 1))):
+            print((mouse_pos[0]) // (self.cell_size + 1),
+                  (mouse_pos[1]) // (self.cell_size + 1))
+            return ((mouse_pos[0]) // (self.cell_size + 1),
+                    (mouse_pos[1]) // (self.cell_size + 1))
         else:
             return None
 
