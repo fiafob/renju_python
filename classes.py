@@ -49,6 +49,7 @@ class Board:
         self.nums_letts(screen)
 
         # само поле
+        surf = pygame.Surface(SIZE, pygame.SRCALPHA)
         # cx, cy - count подсчитвыает текущее расположение ряда/колонны
         cy = self.top
         for row in self.board:
@@ -65,16 +66,17 @@ class Board:
                     pygame.draw.line(screen, color, (self.left, cy + shadow_k * k),
                                      (self.rvx + self.left, cy + k * shadow_k), width=k)
 
-                # На это пока забить можно, это фигура хода в общем
-                cross_x = (cx - self.left)
-                cross_y = (cy - self.top)
+                cross_x = self.cell_size * row.index(elem)
+                cross_y = self.cell_size * self.board.index(row)
                 if elem == 1:
-                    pygame.draw.circle(screen, (0, 0, 255),
-                                       (cross_x + 0.5 * self.cell_size + k, cross_y + 0.5 * self.cell_size + k),
+                    pygame.draw.circle(surf, (0, 0, 255),
+                                       (cross_x + 0.5 * self.cell_size + k,
+                                        cross_y + 0.5 * self.cell_size + k),
                                        self.cell_size // 2 - 2 * k)
                 elif elem == 2:
-                    pygame.draw.circle(screen, (255, 0, 0),
-                                       (cross_x + 0.5 * self.cell_size + k, cross_y + 0.5 * self.cell_size + k),
+                    pygame.draw.circle(surf, (255, 0, 0),
+                                       (cross_x + 0.5 * self.cell_size + k,
+                                        cross_y + 0.5 * self.cell_size + k),
                                        self.cell_size // 2 - 2 * k)
 
                 cx += self.cell_size
@@ -86,6 +88,7 @@ class Board:
                                                (3 + k) * self.cell_size + self.top + 1), 8)
             pygame.draw.circle(screen, COLOR, (self.get_size()[0] + self.left - self.cell_size * 4 + 1,
                                                (3 + k) * self.cell_size + self.top + 1), 8)
+        screen.blit(surf, (0, 0))
 
     # Полупрозрачный квадрат, будет работать до 3 хода, помогает понять, где ходить
     def help_rect(self, screen):
@@ -98,9 +101,13 @@ class Board:
                                             ((height - 2 * self.cell_size) // 2) + self.top),
                                            (self.cell_size, self.cell_size)))
         elif self.p1 + self.p2 == 1:
-            pygame.draw.rect(surf, color, (((width // 2) + self.left,
-                                            (height // 2) + self.top),
-                                           (self.cell_size, self.cell_size)))
+            pygame.draw.rect(surf, color, ((((width - 2 * self.cell_size) // 2) + self.left,
+                                            ((height - 4 * self.cell_size) // 2) + self.top),
+                                           (2 * self.cell_size, self.cell_size)))
+        elif self.p1 + self.p2 == 2:
+            pygame.draw.rect(surf, color, ((((width - 6 * self.cell_size) // 2) + self.left,
+                                            ((height - 6 * self.cell_size) // 2) + self.top),
+                                           (5 * self.cell_size, 5 * self.cell_size)))
         screen.blit(surf, (0, 0))
 
     # Возможно это в итоге не пригодится, но сейчас это нужно чтобы понимать как работает игра
@@ -126,8 +133,6 @@ class Board:
         # она определяет точку в поле 16x16, где одна клетка является переврестием
         if (mouse_pos[0] in range(0, self.width * (self.cell_size + 1))) and \
                 (mouse_pos[1] in range(0, self.height * (self.cell_size + 1))):
-            print((mouse_pos[0]) // (self.cell_size + 1),
-                  (mouse_pos[1]) // (self.cell_size + 1))
             return ((mouse_pos[0]) // (self.cell_size + 1),
                     (mouse_pos[1]) // (self.cell_size + 1))
         else:
