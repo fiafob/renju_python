@@ -1,6 +1,8 @@
 # по всему коду при рисовании фигур можно увидеть + 1/2/3 пикселя - это не что-то особенное,
 # просто ручная настройка чтобы все смотрелось более-менее приемлимо
+import os
 import random
+import sys
 
 import pygame
 
@@ -8,6 +10,29 @@ SIZE = WIDTH, HEIGHT = 900, 674
 RC = 15  # renju_cells
 COLOR = pygame.Color(200, 170, 0)  # тот оранжевый цвет
 FONT = 'data/font/ARCADECLASSIC.TTF'
+PNUM = 3  # количество разных моделей планет каждого цвета
+
+chip_group = pygame.sprite.Group()
+
+
+def load_image(name, colorkey=None):
+    pygame.init()
+    pygame.display.set_caption("Рэндзю")
+    renju_screen = pygame.display.set_mode(SIZE)
+
+    fullname = os.path.join("data", name)
+    if not os.path.isfile(fullname):
+        print('jj')
+        sys.exit()
+    image = pygame.image.load(fullname)
+    if colorkey is not None:
+        image = image.convert()
+        if colorkey == -1:
+            colorkey = image.get_at((0, 0))
+        image.set_colorkey(colorkey)
+    else:
+        image = image.convert_alpha()
+    return image
 
 
 # Очень сырой вариант : крестики-нолики вместо фишек // поле накладывается одно поверх другого
@@ -79,15 +104,14 @@ class Board:
                 cross_x = cx - self.left
                 cross_y = cy - self.top
                 if elem == 1:
-                    pygame.draw.circle(surf, (0, 0, 255),
-                                       (cross_x + 0.5 * self.cell_size + k - 1,
-                                        cross_y + 0.5 * self.cell_size + k - 1),
-                                       (self.cell_size - k - 1) // 2)
+                    chipb = BlueChip(chip_group)
+                    chipb.rect.x = cross_x + k - 1
+                    chipb.rect.y = cross_y + k - 1
+
                 elif elem == 2:
-                    pygame.draw.circle(surf, (255, 0, 0),
-                                       (cross_x + 0.5 * self.cell_size + k - 1,
-                                        cross_y + 0.5 * self.cell_size + k - 1),
-                                       (self.cell_size - k - 1) // 2)
+                    chipr = RedChip(chip_group)
+                    chipr.rect.x = cross_x + k - 1
+                    chipr.rect.y = cross_y + k - 1
 
                 cx += self.cell_size
             cy += self.cell_size
@@ -97,8 +121,9 @@ class Board:
                                                (3 + k) * self.cell_size + self.top + 1), 8)
             pygame.draw.circle(screen, COLOR,
                                (self.get_size()[0] + self.left - self.cell_size * 4 + 1,
-                               (3 + k) * self.cell_size + self.top + 1), 8)
+                                (3 + k) * self.cell_size + self.top + 1), 8)
         screen.blit(surf, (0, 0))
+        chip_group.draw(screen)
 
     # Полупрозрачный квадрат, будет работать до 3 хода, помогает понять, где ходить
     def help_rect(self, screen):
@@ -160,7 +185,7 @@ class Board:
         for clr in [btn_clr, txt_clr]:
             hsv = clr.hsva
             clr.hsva = (int(hsv[0]), int(hsv[1]), int(hsv[2]) - self.shdwK, int(hsv[3]))
-        xy0 = x0, y0 = self.get_size()[0] + 2 * self.cell_size, HEIGHT - 2 * self.cell_size - self.top
+        x0, y0 = self.get_size()[0] + 2 * self.cell_size, HEIGHT - 2 * self.cell_size - self.top
 
         dy = 0
         if not self.button_clicked:
@@ -199,8 +224,11 @@ class Board:
                 self.update_desk()
 
     def update_desk(self):
+        global chip_group
+        chip_group = pygame.sprite.Group()
         self.board = [[0] * self.width for _ in range(self.height)]
         self.p1, self.p2 = 0, 0
+        self.turn = 1
     #############################################################################################
     #############################################################################################
 
@@ -246,8 +274,24 @@ class Board:
 
 
 # класс фишки, т.к. я думаю с ней придется много работать
-class Chip:
-    ...
+class BlueChip(pygame.sprite.Sprite):
+    image = load_image(f"img/blue{random.randrange(3) + 1}.png")
+    image = pygame.transform.scale(image, (40, 40))
+
+    def __init__(self, *group):
+        super().__init__(*group)
+        self.image = BlueChip.image
+        self.rect = self.image.get_rect()
+
+
+class RedChip(pygame.sprite.Sprite):
+    image = load_image(f"img/red{random.randrange(3) + 1}.png")
+    image = pygame.transform.scale(image, (40, 40))
+
+    def __init__(self, *group):
+        super().__init__(*group)
+        self.image = RedChip.image
+        self.rect = self.image.get_rect()
 
 
 #########################################################################
@@ -275,7 +319,7 @@ class BackgroundBlink:
         counter = 0
         k = 3
         for x, y in self.positions:
-            color = pygame.Color(200, 255, 255, 200 - self.darkness)
+            color = pygame.Color(220, 255, 255, 200 - self.darkness)
             # Отображение разных звезд
 
             # простой плюсик

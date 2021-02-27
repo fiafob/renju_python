@@ -4,7 +4,7 @@ import sys
 
 import pygame as pg
 
-from classes import Board, BackgroundBlink
+from classes import Board, BackgroundBlink, load_image
 
 SIZE = WIDTH, HEIGHT = 900, 674
 RC = 15  # renju_cells
@@ -13,24 +13,9 @@ CHANGE_BACKGROUND = pg.USEREVENT + 1
 DARKNESS_TICK = CHANGE_BACKGROUND + 1
 
 # Инициализация и настройка окна с самой игрой
-pg.init()
-pg.display.set_caption("Рендзю")
+# pg.init()
+# pg.display.set_caption("Рендзю")
 renju_screen = pg.display.set_mode(SIZE)
-
-
-def load_image(name, colorkey=None):
-    fullname = os.path.join("data", name)
-    if not os.path.isfile(fullname):
-        sys.exit()
-    image = pg.image.load(fullname)
-    if colorkey is not None:
-        image = image.convert()
-        if colorkey == -1:
-            colorkey = image.get_at((0, 0))
-        image.set_colorkey(colorkey)
-    else:
-        image = image.convert_alpha()
-    return image
 
 
 def main():
