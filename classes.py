@@ -30,7 +30,8 @@ class Board:
         self.p2 = 0
 
         # rv - right version
-        self.rvx, self.rvy = self.get_size()[0] - self.cell_size, self.get_size()[1] - self.cell_size
+        self.rvx = self.get_size()[0] - self.cell_size
+        self.rvy = self.get_size()[1] - self.cell_size
 
         # коэффицент затемнения
         self.shdwK = 30
@@ -43,7 +44,8 @@ class Board:
         self.cell_size = cell_size
 
         # rv - right version
-        self.rvx, self.rvy = self.get_size()[0] - self.cell_size, self.get_size()[1] - self.cell_size
+        self.rvx = self.get_size()[0] - self.cell_size
+        self.rvy = self.get_size()[1] - self.cell_size
 
     def render(self, screen):
         # k - коэффицент толщины рамки
@@ -63,7 +65,8 @@ class Board:
                 for shadow_k in range(1, -1, -1):
                     color = pygame.Color(200, 170, 0)
                     hsv = color.hsva
-                    color.hsva = (int(hsv[0]), int(hsv[1]), int(hsv[2] - 30 * shadow_k), int(hsv[3]))
+                    color.hsva = (int(hsv[0]), int(hsv[1]),
+                                  int(hsv[2] - 30 * shadow_k), int(hsv[3]))
                     # vertical line
                     pygame.draw.line(screen, color, (cx + k * shadow_k, self.top + k * shadow_k),
                                      (cx + k * shadow_k, self.rvy + self.top), width=k)
@@ -90,8 +93,9 @@ class Board:
         for k in range(1, 9, 7):
             pygame.draw.circle(screen, COLOR, (3 * self.cell_size + self.left + 1,
                                                (3 + k) * self.cell_size + self.top + 1), 8)
-            pygame.draw.circle(screen, COLOR, (self.get_size()[0] + self.left - self.cell_size * 4 + 1,
-                                               (3 + k) * self.cell_size + self.top + 1), 8)
+            pygame.draw.circle(screen, COLOR,
+                               (self.get_size()[0] + self.left - self.cell_size * 4 + 1,
+                               (3 + k) * self.cell_size + self.top + 1), 8)
         screen.blit(surf, (0, 0))
 
     # Полупрозрачный квадрат, будет работать до 3 хода, помогает понять, где ходить
@@ -185,6 +189,11 @@ class Board:
                 self.button_clicked = True
             else:
                 self.button_clicked = False
+                self.update_desk()
+
+    def update_desk(self):
+        self.board = [[0] * self.width for _ in range(self.height)]
+        self.p1, self.p2 = 0, 0
     #############################################################################################
     #############################################################################################
 
@@ -244,7 +253,8 @@ class BackgroundBlink:
         self.stars = stars
 
         # случайное расположение звезд
-        self.positions = [(random.randrange(WIDTH), random.randrange(HEIGHT)) for _ in range(stars)]
+        self.positions = [(random.randrange(WIDTH), random.randrange(HEIGHT))
+                          for _ in range(stars)]
 
         # переменная, из-за которой звезды затухают
         self.darkness = 200
@@ -302,4 +312,5 @@ class BackgroundBlink:
     # функция обновляется каждые 12 секунд, меняя расположение звезд
     def update(self):
         self.darkness = 200
-        self.positions = [(random.randrange(WIDTH), random.randrange(HEIGHT)) for _ in range(self.stars)]
+        self.positions = [(random.randrange(WIDTH), random.randrange(HEIGHT))
+                          for _ in range(self.stars)]
