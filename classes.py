@@ -11,18 +11,17 @@ RC = 15  # renju_cells
 COLOR = pygame.Color(200, 170, 0)  # тот оранжевый цвет
 FONT = 'data/font/ARCADECLASSIC.TTF'
 PNUM = 3  # количество разных моделей планет каждого цвета
-
-chip_group = pygame.sprite.Group()
+PXS = 41  # допустимое значение фишки
 
 
 def load_image(name, colorkey=None):
     pygame.init()
     pygame.display.set_caption("Рэндзю")
+    # без этой строки ничего не работает, но она сама ничего не делает
     renju_screen = pygame.display.set_mode(SIZE)
 
     fullname = os.path.join("data", name)
     if not os.path.isfile(fullname):
-        print('jj')
         sys.exit()
     image = pygame.image.load(fullname)
     if colorkey is not None:
@@ -49,6 +48,7 @@ class Board:
         self.left = 10
         self.top = 10
         self.cell_size = 30
+        self.chip_group = pygame.sprite.Group()
 
         # turn - определяет кто сейчас ходит. 1 - blue, 2 - red
         # p1 | p2 - player1 | player2 - сколько ходов сделал игрок
@@ -95,35 +95,38 @@ class Board:
                     color.hsva = (int(hsv[0]), int(hsv[1]),
                                   int(hsv[2] - 30 * shadow_k), int(hsv[3]))
                     # vertical line
-                    pygame.draw.line(screen, color, (cx + k * shadow_k, self.top + k * shadow_k),
+                    pygame.draw.line(surf, color, (cx + k * shadow_k, self.top + k * shadow_k),
                                      (cx + k * shadow_k, self.rvy + self.top), width=k)
                     # horizontal line
-                    pygame.draw.line(screen, color, (self.left, cy + shadow_k * k),
+                    pygame.draw.line(surf, color, (self.left, cy + shadow_k * k),
                                      (self.rvx + self.left, cy + k * shadow_k), width=k)
 
                 cross_x = cx - self.left
                 cross_y = cy - self.top
+                # HUYNYA
                 if elem == 1:
-                    chipb = BlueChip(chip_group)
-                    chipb.rect.x = cross_x + k - 1
-                    chipb.rect.y = cross_y + k - 1
+                    # chipb = BlueChip(self.chip_group)
+                    # chipb.rect.x = cross_x + k - 1
+                    # chipb.rect.y = cross_y + k - 1
+                    ...
 
                 elif elem == 2:
-                    chipr = RedChip(chip_group)
-                    chipr.rect.x = cross_x + k - 1
-                    chipr.rect.y = cross_y + k - 1
+                    ...
+                    # chipr = RedChip(self.chip_group)
+                    # chipr.rect.x = cross_x + k - 1
+                    # chipr.rect.y = cross_y + k - 1
 
                 cx += self.cell_size
             cy += self.cell_size
         # 4 точки, пока не знаю для чего они
         for k in range(1, 9, 7):
-            pygame.draw.circle(screen, COLOR, (3 * self.cell_size + self.left + 1,
+            pygame.draw.circle(surf, COLOR, (3 * self.cell_size + self.left + 1,
                                                (3 + k) * self.cell_size + self.top + 1), 8)
-            pygame.draw.circle(screen, COLOR,
+            pygame.draw.circle(surf, COLOR,
                                (self.get_size()[0] + self.left - self.cell_size * 4 + 1,
                                 (3 + k) * self.cell_size + self.top + 1), 8)
         screen.blit(surf, (0, 0))
-        chip_group.draw(screen)
+        self.chip_group.draw(screen)
 
     # Полупрозрачный квадрат, будет работать до 3 хода, помогает понять, где ходить
     def help_rect(self, screen):
@@ -164,16 +167,20 @@ class Board:
     #############################################################################################
 
     def hud(self, screen):
-        if self.turn == 1:
-            pygame.draw.circle(screen, (0, 0, 255),
-                               (self.get_size()[0] + 3 * self.cell_size,
-                                self.top + self.cell_size),
-                               self.cell_size)
+        if self.turn == 2:
+
+            txt_clr = pygame.Color(100, 0, 0)
+            font = pygame.font.Font(FONT, int(2.5 * RC))
+            text = font.render("RED  TURN", True, txt_clr)
+            screen.blit(text, (self.get_size()[0] + 1.3 * self.cell_size + PXS - 4,
+                               self.top))
         else:
-            pygame.draw.circle(screen, (255, 0, 0),
-                               (self.get_size()[0] + 3 * self.cell_size,
-                                self.top + self.cell_size),
-                               self.cell_size)
+
+            txt_clr = pygame.Color(0, 0, 170)
+            font = pygame.font.Font(FONT, int(2.5 * RC))
+            text = font.render("BLUE  TURN", True, txt_clr)
+            screen.blit(text, (self.get_size()[0] + 1.3 * self.cell_size + PXS - 4,
+                               self.top))
 
         self.button(screen)
 
@@ -224,8 +231,7 @@ class Board:
                 self.update_desk()
 
     def update_desk(self):
-        global chip_group
-        chip_group = pygame.sprite.Group()
+        self.chip_group = pygame.sprite.Group()
         self.board = [[0] * self.width for _ in range(self.height)]
         self.p1, self.p2 = 0, 0
         self.turn = 1
@@ -244,13 +250,22 @@ class Board:
     # обрабатывает что делать при нажатии
     def on_click(self, cell_coords):
         if cell_coords is not None:
-            if self.board[cell_coords[1]][cell_coords[0]] == 0:
+            # здесь, 2 = k - 1| (k - коэфицент толщины)
+            nx, ny = cell_coords
+            if self.board[ny][nx] == 0:
                 if self.turn == 1:
                     self.p1 += 1
+                    chip = RedChip(self.chip_group)
+                    chip.rect.x = nx * self.cell_size + 2
+                    chip.rect.y = ny * self.cell_size + 2
+
                 elif self.turn == 2:
                     self.p2 += 1
+                    chip = BlueChip(self.chip_group)
+                    chip.rect.x = nx * self.cell_size + 2
+                    chip.rect.y = ny * self.cell_size + 2
                 # если поле пустое, ему передается значение игрока, который ходит
-                self.board[cell_coords[1]][cell_coords[0]] = self.turn
+                self.board[ny][nx] = self.turn
                 self.turn = self.turn % 2 + 1
 
         print(cell_coords)
@@ -275,22 +290,22 @@ class Board:
 
 # класс фишки, т.к. я думаю с ней придется много работать
 class BlueChip(pygame.sprite.Sprite):
-    image = load_image(f"img/blue{random.randrange(3) + 1}.png")
-    image = pygame.transform.scale(image, (40, 40))
+    game_chip = load_image('img/red1.png')
+    win_chip = load_image('img/red2.png')
 
     def __init__(self, *group):
         super().__init__(*group)
-        self.image = BlueChip.image
+        self.image = BlueChip.game_chip
         self.rect = self.image.get_rect()
 
 
 class RedChip(pygame.sprite.Sprite):
-    image = load_image(f"img/red{random.randrange(3) + 1}.png")
-    image = pygame.transform.scale(image, (40, 40))
+    game_chip = load_image('img/blue1.png')
+    win_chip = load_image('img/blue2.png')
 
     def __init__(self, *group):
         super().__init__(*group)
-        self.image = RedChip.image
+        self.image = RedChip.game_chip
         self.rect = self.image.get_rect()
 
 
