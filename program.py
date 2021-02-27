@@ -27,7 +27,7 @@ def main():
     board = Board(RC, RC)
     board.set_view(cell_size // 2, cell_size // 2, (HEIGHT - cell_size) // RC)
 
-    bg = BackgroundBlink(50)
+    bg = BackgroundBlink(25)
     pg.time.set_timer(CHANGE_BACKGROUND, 12000)
     pg.time.set_timer(DARKNESS_TICK, 6000 // 200)
 
@@ -37,6 +37,9 @@ def main():
             if event.type == pg.QUIT:
                 game_running = False
 
+            if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                board.button_click(event.pos, 'down')
+
         # Надо обработать двойное нажатие левой кнопки
             if event.type == pg.MOUSEBUTTONUP and event.button == 1:
                 if timer == 0:
@@ -44,11 +47,15 @@ def main():
                 elif timer < 0.5:
                     board.get_click(event.pos)
                     timer = 0
+                board.button_click(event.pos, 'up')
 
-            if event.type == CHANGE_BACKGROUND:
+            elif event.type == pg.MOUSEMOTION:
+                board.button_check(event.pos)
+
+            elif event.type == CHANGE_BACKGROUND:
                 bg.update()
 
-            if event.type == DARKNESS_TICK:
+            elif event.type == DARKNESS_TICK:
                 bg.change_darkness()
 
         if timer != 0:

@@ -23,7 +23,7 @@ class Board:
         self.top = 10
         self.cell_size = 30
 
-        # turn - определяет кто сейчас ходит
+        # turn - определяет кто сейчас ходит. 1 - blue, 2 - red
         # p1 | p2 - player1 | player2 - сколько ходов сделал игрок
         self.turn = 1
         self.p1 = 0
@@ -31,6 +31,10 @@ class Board:
 
         # rv - right version
         self.rvx, self.rvy = self.get_size()[0] - self.cell_size, self.get_size()[1] - self.cell_size
+
+        # коэффицент затемнения
+        self.shdwK = 30
+        self.button_clicked = False
 
     # настройка внешнего вида
     def set_view(self, left, top, cell_size):
@@ -125,6 +129,9 @@ class Board:
             screen.blit(text, (self.left // 1.5 + n * self.cell_size,
                                2 * self.top + self.rvy))
 
+    #############################################################################################
+    #############################################################################################
+
     def hud(self, screen):
         if self.turn == 1:
             pygame.draw.circle(screen, (0, 0, 255),
@@ -137,10 +144,50 @@ class Board:
                                 self.top + self.cell_size),
                                self.cell_size)
 
+        self.button(screen)
+
+    def button(self, screen):
+        #
+        btn_clr = pygame.Color(200, 170, 0)
+        txt_clr = pygame.Color(240, 240, 240)
+        font = pygame.font.Font(FONT, 2 * RC)
+        for clr in [btn_clr, txt_clr]:
+            hsv = clr.hsva
+            clr.hsva = (int(hsv[0]), int(hsv[1]), int(hsv[2]) - self.shdwK, int(hsv[3]))
+        xy0 = x0, y0 = self.get_size()[0] + 2 * self.cell_size, HEIGHT - self.cell_size - self.top
+        pygame.draw.rect(screen, btn_clr, ((x0 - 1, y0 + self.cell_size // 3.8),
+                                           (int(3.5 * self.cell_size), int(1 * self.cell_size))),
+                         border_radius=5)
+        if self.button_clicked:
+            btn_clr = (btn_clr[0] - 30, btn_clr[1] - 30, btn_clr[2])
+            pygame.draw.rect(screen, btn_clr,
+                             ((x0 + 1, y0 + self.cell_size // 3.8 + 2),
+                              (int(3.5 * self.cell_size), int(1 * self.cell_size))),
+                             border_radius=5)
+        text = font.render('RESTART', True, txt_clr)
+        screen.blit(text, (x0 + self.cell_size // 2.4, y0 + self.cell_size // 2.5))
+
+    def button_check(self, mouse_pos):
+        x0 = self.get_size()[0] + 2 * self.cell_size
+        y0 = HEIGHT - self.cell_size - self.top
+        if mouse_pos[0] in range(x0, x0 + int(3.5 * self.cell_size)) and \
+                mouse_pos[1] in range(y0, y0 + int(1.5 * self.cell_size)):
+            self.shdwK = 0
+        else:
+            self.shdwK = 30
+
+    def button_click(self, mouse_pos, action):
+        x0 = self.get_size()[0] + 2 * self.cell_size
+        y0 = HEIGHT - self.cell_size - self.top
+        if mouse_pos[0] in range(x0, x0 + int(3.5 * self.cell_size)) and \
+                mouse_pos[1] in range(y0, y0 + int(1.5 * self.cell_size)):
+            if action == "down":
+                self.button_clicked = True
+            else:
+                self.button_clicked = False
     #############################################################################################
     #############################################################################################
 
-    # тут поменять надо чуть-чуть, чтобы "клеткой" называлось перекрестие, а не пустое пространство
     def get_cell(self, mouse_pos):
         # она определяет точку в поле 16x16, где одна клетка является переврестием
         if (mouse_pos[0] in range(0, self.width * (self.cell_size + 1))) and \
@@ -175,6 +222,16 @@ class Board:
     # возвращает размер доски в пикселях
     def get_size(self):
         return self.cell_size * self.width, self.cell_size * self.height
+
+
+#########################################################################
+#########################################################################
+#########################################################################
+
+
+# класс фишки, т.к. я думаю с ней придется много работать
+class Chip:
+    ...
 
 
 #########################################################################
