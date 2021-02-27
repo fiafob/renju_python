@@ -1,8 +1,10 @@
+# по всему коду при рисовании фигур можно увидеть + 1/2/3 пикселя - это не что-то особенное,
+# просто ручная настройка чтобы все смотрелось более-менее приемлимо
 import random
 
 import pygame
 
-SIZE = WIDTH, HEIGHT = 1000, 630
+SIZE = WIDTH, HEIGHT = 900, 674
 RC = 15  # renju_cells
 COLOR = pygame.Color(200, 170, 0)  # тот оранжевый цвет
 FONT = 'data/font/ARCADECLASSIC.TTF'
@@ -80,12 +82,12 @@ class Board:
                     pygame.draw.circle(surf, (0, 0, 255),
                                        (cross_x + 0.5 * self.cell_size + k - 1,
                                         cross_y + 0.5 * self.cell_size + k - 1),
-                                       self.cell_size // 2 - k)
+                                       (self.cell_size - k - 1) // 2)
                 elif elem == 2:
                     pygame.draw.circle(surf, (255, 0, 0),
                                        (cross_x + 0.5 * self.cell_size + k - 1,
                                         cross_y + 0.5 * self.cell_size + k - 1),
-                                       self.cell_size // 2 - k)
+                                       (self.cell_size - k - 1) // 2)
 
                 cx += self.cell_size
             cy += self.cell_size
@@ -105,16 +107,16 @@ class Board:
         color = pygame.Color(200, 170, 0, 50)
         # p1 + p2 - общее количество ходов
         if self.p1 + self.p2 == 0:
-            pygame.draw.rect(surf, color, ((((width - 2 * self.cell_size) // 2) + self.left,
-                                            ((height - 2 * self.cell_size) // 2) + self.top),
+            pygame.draw.rect(surf, color, ((((width - 2 * self.cell_size) // 2) + self.left + 1,
+                                            ((height - 2 * self.cell_size) // 2) + self.top + 1),
                                            (self.cell_size, self.cell_size)))
         elif self.p1 + self.p2 == 1:
-            pygame.draw.rect(surf, color, ((((width - 2 * self.cell_size) // 2) + self.left,
-                                            ((height - 4 * self.cell_size) // 2) + self.top),
+            pygame.draw.rect(surf, color, ((((width - 2 * self.cell_size) // 2) + self.left + 1,
+                                            ((height - 4 * self.cell_size) // 2) + self.top + 1),
                                            (2 * self.cell_size, self.cell_size)))
         elif self.p1 + self.p2 == 2:
-            pygame.draw.rect(surf, color, ((((width - 6 * self.cell_size) // 2) + self.left,
-                                            ((height - 6 * self.cell_size) // 2) + self.top),
+            pygame.draw.rect(surf, color, ((((width - 6 * self.cell_size) // 2) + self.left + 1,
+                                            ((height - 6 * self.cell_size) // 2) + self.top + 1),
                                            (5 * self.cell_size, 5 * self.cell_size)))
         screen.blit(surf, (0, 0))
 
@@ -158,22 +160,27 @@ class Board:
         for clr in [btn_clr, txt_clr]:
             hsv = clr.hsva
             clr.hsva = (int(hsv[0]), int(hsv[1]), int(hsv[2]) - self.shdwK, int(hsv[3]))
-        xy0 = x0, y0 = self.get_size()[0] + 2 * self.cell_size, HEIGHT - self.cell_size - self.top
-        pygame.draw.rect(screen, btn_clr, ((x0 - 1, y0 + self.cell_size // 3.8),
-                                           (int(3.5 * self.cell_size), int(1 * self.cell_size))),
-                         border_radius=5)
-        if self.button_clicked:
+        xy0 = x0, y0 = self.get_size()[0] + 2 * self.cell_size, HEIGHT - 2 * self.cell_size - self.top
+
+        dy = 0
+        if not self.button_clicked:
             btn_clr = (btn_clr[0] - 30, btn_clr[1] - 30, btn_clr[2])
-            pygame.draw.rect(screen, btn_clr,
-                             ((x0 + 1, y0 + self.cell_size // 3.8 + 2),
+
+            pygame.draw.rect(screen, (btn_clr[0] - 50, btn_clr[1] - 50, btn_clr[2]),
+                             ((x0 - 1, y0 + self.cell_size // 2.8),
                               (int(3.5 * self.cell_size), int(1 * self.cell_size))),
                              border_radius=5)
+        else:
+            dy = 4
+        pygame.draw.rect(screen, btn_clr, ((x0 - 1, y0 + self.cell_size // 3.8 + dy),
+                                           (int(3.5 * self.cell_size), int(1 * self.cell_size))),
+                         border_radius=5)
         text = font.render('RESTART', True, txt_clr)
-        screen.blit(text, (x0 + self.cell_size // 2.4, y0 + self.cell_size // 2.5))
+        screen.blit(text, (x0 + self.cell_size // 2.4, y0 + self.cell_size // 2.5 + dy))
 
     def button_check(self, mouse_pos):
         x0 = self.get_size()[0] + 2 * self.cell_size
-        y0 = HEIGHT - self.cell_size - self.top
+        y0 = HEIGHT - 2 * self.cell_size - self.top
         if mouse_pos[0] in range(x0, x0 + int(3.5 * self.cell_size)) and \
                 mouse_pos[1] in range(y0, y0 + int(1.5 * self.cell_size)):
             self.shdwK = 0
@@ -182,7 +189,7 @@ class Board:
 
     def button_click(self, mouse_pos, action):
         x0 = self.get_size()[0] + 2 * self.cell_size
-        y0 = HEIGHT - self.cell_size - self.top
+        y0 = HEIGHT - 2 * self.cell_size - self.top
         if mouse_pos[0] in range(x0, x0 + int(3.5 * self.cell_size)) and \
                 mouse_pos[1] in range(y0, y0 + int(1.5 * self.cell_size)):
             if action == "down":
@@ -268,7 +275,7 @@ class BackgroundBlink:
         counter = 0
         k = 3
         for x, y in self.positions:
-            color = pygame.Color(255, 255, 255, 200 - self.darkness)
+            color = pygame.Color(200, 255, 255, 200 - self.darkness)
             # Отображение разных звезд
 
             # простой плюсик

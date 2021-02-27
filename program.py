@@ -1,20 +1,40 @@
-# Короче, тут будет сама игра, а классы в отдельном файле наверно
-# Еще надо добавить кнопку сдроса доски / счеткик каждого из игроков
+# Короче, тут будет сама игра, а классы в отдельном файле
+import os
+import sys
+
 import pygame as pg
 
 from classes import Board, BackgroundBlink
 
 SIZE = WIDTH, HEIGHT = 900, 674
 RC = 15  # renju_cells
+STARS = 25
 CHANGE_BACKGROUND = pg.USEREVENT + 1
 DARKNESS_TICK = CHANGE_BACKGROUND + 1
 
+# Инициализация и настройка окна с самой игрой
+pg.init()
+pg.display.set_caption("Рендзю")
+renju_screen = pg.display.set_mode(SIZE)
+
+
+def load_image(name, colorkey=None):
+    fullname = os.path.join("data", name)
+    if not os.path.isfile(fullname):
+        sys.exit()
+    image = pg.image.load(fullname)
+    if colorkey is not None:
+        image = image.convert()
+        if colorkey == -1:
+            colorkey = image.get_at((0, 0))
+        image.set_colorkey(colorkey)
+    else:
+        image = image.convert_alpha()
+    return image
+
 
 def main():
-    # Инициализация и настройка окна с самой игрой
-    pg.init()
-    pg.display.set_caption("Рендзю")
-    renju_screen = pg.display.set_mode(SIZE)
+
     game_running = True
 
     # обрабатывает двойные нажатия
@@ -27,12 +47,14 @@ def main():
     board = Board(RC, RC)
     board.set_view(cell_size // 2, cell_size // 2, (HEIGHT - cell_size) // RC)
 
-    bg = BackgroundBlink(25)
+    # для заднего фона
+    bg = BackgroundBlink(STARS)
     pg.time.set_timer(CHANGE_BACKGROUND, 12000)
     pg.time.set_timer(DARKNESS_TICK, 6000 // 200)
 
     while game_running:
-        renju_screen.fill((0, 0, 0))
+        # изображение на заднем фоне
+        renju_screen.blit(background, (0, 0))
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 game_running = False
@@ -44,7 +66,7 @@ def main():
             if event.type == pg.MOUSEBUTTONUP and event.button == 1:
                 if timer == 0:
                     timer = 0.001
-                elif timer < 0.5:
+                elif timer < 0.3:
                     board.get_click(event.pos)
                     timer = 0
                 board.button_click(event.pos, 'up')
@@ -60,7 +82,7 @@ def main():
 
         if timer != 0:
             timer += dt
-            if timer >= 0.5:
+            if timer >= 0.3:
                 timer = 0
 
         bg.show_stars(renju_screen)
@@ -71,5 +93,6 @@ def main():
     pg.quit()
 
 
-if __name__ == "__main__":
-    main()
+background = load_image("img/bg.png")
+background = pg.transform.scale(background, (int(1920 // 1.5), int(1080 // 1.5)))
+main()
