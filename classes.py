@@ -64,6 +64,10 @@ class Board:
 
         # переменная блокирует нажатия на поле, чтобы не поставили фишки
         self.win = False
+        self.screen = None
+
+    def set_screen(self, screen):
+        self.screen = screen
 
     # настройка внешнего вида
     def set_view(self, left, top, cell_size):
@@ -126,16 +130,16 @@ class Board:
         color = pygame.Color(200, 170, 0, 50)
         # p1 + p2 - общее количество ходов
         if self.p1 + self.p2 == 0:
-            pygame.draw.rect(surf, color, ((((width - 2 * self.cell_size) // 2) + self.left + 1,
-                                            ((height - 2 * self.cell_size) // 2) + self.top + 1),
+            pygame.draw.rect(surf, color, ((((width - 2 * self.cell_size) // 2) + self.left + 2,
+                                            ((height - 2 * self.cell_size) // 2) + self.top + 2),
                                            (self.cell_size, self.cell_size)))
         elif self.p1 + self.p2 == 1:
-            pygame.draw.rect(surf, color, ((((width - 2 * self.cell_size) // 2) + self.left + 1,
-                                            ((height - 4 * self.cell_size) // 2) + self.top + 1),
+            pygame.draw.rect(surf, color, ((((width - 2 * self.cell_size) // 2) + self.left + 2,
+                                            ((height - 4 * self.cell_size) // 2) + self.top + 2),
                                            (2 * self.cell_size, self.cell_size)))
         elif self.p1 + self.p2 == 2:
-            pygame.draw.rect(surf, color, ((((width - 6 * self.cell_size) // 2) + self.left + 1,
-                                            ((height - 6 * self.cell_size) // 2) + self.top + 1),
+            pygame.draw.rect(surf, color, ((((width - 6 * self.cell_size) // 2) + self.left + 2,
+                                            ((height - 6 * self.cell_size) // 2) + self.top + 2),
                                            (5 * self.cell_size, 5 * self.cell_size)))
         screen.blit(surf, (0, 0))
 
@@ -158,19 +162,20 @@ class Board:
 
     def hud(self, screen):
         # показывает кто ходит в верхнем правом углу
-        if self.turn == 2:
-            txt_clr = pygame.Color(150, 0, 0)
-            font = pygame.font.Font(FONT, int(2.5 * RC))
-            text = font.render("RED  TURN", True, txt_clr)
-            screen.blit(text, (self.get_size()[0] + 1.3 * self.cell_size,
-                               self.top))
-        else:
+        if not self.win:
+            if self.turn == 2:
+                txt_clr = pygame.Color(150, 0, 0)
+                font = pygame.font.Font(FONT, int(2.5 * RC))
+                text = font.render("RED  TURN", True, txt_clr)
+                screen.blit(text, (self.get_size()[0] + 1.3 * self.cell_size,
+                                   self.top))
+            else:
 
-            txt_clr = pygame.Color(0, 0, 170)
-            font = pygame.font.Font(FONT, int(2.5 * RC))
-            text = font.render("BLUE  TURN", True, txt_clr)
-            screen.blit(text, (self.get_size()[0] + 1.3 * self.cell_size,
-                               self.top))
+                txt_clr = pygame.Color(0, 0, 170)
+                font = pygame.font.Font(FONT, int(2.5 * RC))
+                text = font.render("BLUE  TURN", True, txt_clr)
+                screen.blit(text, (self.get_size()[0] + 1.3 * self.cell_size,
+                                   self.top))
 
         self.button(screen)
 
@@ -220,7 +225,7 @@ class Board:
                 self.update_desk()
 
     def update_desk(self):
-        self.chip_group = pygame.sprite.Group.empty
+        self.chip_group = pygame.sprite.Group()
         self.board = [[0] * self.width for _ in range(self.height)]
         self.p1, self.p2 = 0, 0
         self.turn = 1
@@ -257,13 +262,13 @@ class Board:
                         and (nx not in range(5, 10) or ny not in range(5, 10)):
                     return
 
-                if self.turn == 1:
+                if self.turn == 2:
                     self.p1 += 1
                     chip = RedChip(self.chip_group)
                     chip.rect.x = nx * self.cell_size + 3
                     chip.rect.y = ny * self.cell_size + 2
 
-                elif self.turn == 2:
+                elif self.turn == 1:
                     self.p2 += 1
                     chip = BlueChip(self.chip_group)
                     chip.rect.x = nx * self.cell_size + 3
@@ -285,49 +290,47 @@ class Board:
     def get_size(self):
         return self.cell_size * self.width, self.cell_size * self.height
     ########################################################################
+    ########################################################################
 
-    def winner(self, player, coord):
+    def winner(self, player, coords):
         print("winner", player)
+        print(coords)
         self.win = True
+        for coord in coords:
+            coord = coord[1] * self.cell_size + self.left, coord[0] * self.cell_size + self.top
+            self.chip_group.update(coord)
+
+    ########################################################################
 
     def win_check(self):
-        p1hcount, p2hcount = 1, 1
-        p1vcount, p2vcount = 1, 1
-
         # horizontal/vertical check
         # т.к. доска 15х15, т.е. квадратная, можно сразу проверить и вертикально и горизонтально
         for x in range(self.height):
-            for y in range(self.width - 1):
-                if p1hcount == 5 or p1vcount == 5:
+            p1hcount, p2hcount = [], []
+            p1vcount, p2vcount = [], []
+            for y in range(self.width):
+                if self.board[x][y] == 0:
+                    p1hcount, p2hcount = [], []
+                else:
+                    num = self.board[x][y]
+                    exec(f'p{num}hcount.append((x, y))')
+                    exec(f'p{num % 2 + 1}hcount.clear()')
+
+                if self.board[y][x] == 0:
+                    p1vcount, p2vcount = [], []
+                else:
+                    num = self.board[y][x]
+                    exec(f'p{num}vcount.append((y, x))')
+                    exec(f'p{num % 2 + 1}vcount.clear()')
+
+                if len(p1hcount) == 5 or len(p1vcount) == 5:
                     poses = max([p1hcount, p1vcount], key=lambda t: len(t))
-                    self.winner("blue", poses)
+                    self.winner("BLUE", poses)
                     return
-                if p2hcount == 5 or p2vcount == 5:
+                if len(p2hcount) == 5 or len(p2vcount) == 5:
                     poses = max([p2vcount, p2hcount], key=lambda t: len(t))
-                    self.winner("red", poses)
+                    self.winner("RED", poses)
                     return
-
-                if self.board[x][y] == 1:
-                    if self.board[x][y + 1] == 1:
-                        p1hcount += 1
-                    else:
-                        p1hcount = 1
-                elif self.board[x][y] == 2:
-                    if self.board[x][y + 1] == 2:
-                        p2hcount += 1
-                    else:
-                        p2hcount = 1
-
-                if self.board[y][x] == 1:
-                    if self.board[y + 1][x] == 1:
-                        p1vcount += 1
-                    else:
-                        p1vcount = 1
-                elif self.board[y][x] == 2:
-                    if self.board[y + 1][x] == 2:
-                        p2vcount += 1
-                    else:
-                        p2vcount = 1
 
         # diag
         # проверка работает только на нижнюю половину доски,
@@ -335,82 +338,85 @@ class Board:
         for i in range(self.height):
             length = self.height - 1
             # счет по диагонали
-            p1d1c, p2d1c = 0, 0
-            p1d2c, p2d2c = 0, 0
+            p1d1c, p2d1c = [], []
+            p1d2c, p2d2c = [], []
             # счет на вторую половину
-            hp1d1, hp2d1 = 0, 0
-            hp1d2, hp2d2 = 0, 0
+            hp1d1, hp2d1 = [], []
+            hp1d2, hp2d2 = [], []
 
             for j in range(i + 1):
                 if i < length:
-                    if self.board[length - i + j][length - j] == 1:
-                        hp1d1 += 1
+                    if self.board[length - i + j][length - j] == 0:
+                        hp1d1, hp2d1 = [], []
                     else:
-                        hp1d1 = 0
-                    if self.board[length - i + j][length - j] == 2:
-                        hp2d1 += 1
-                    else:
-                        hp2d1 = 0
+                        num = self.board[length - i + j][length - j]
+                        exec(f"hp{num}d1.append((length - i + j, length - j))")
+                        exec(f"hp{num % 2 + 1}d1.clear()")
 
-                    if self.board[j][length - i + j] == 1:
-                        hp1d2 += 1
+                    if self.board[j][length - i + j] == 0:
+                        hp1d2, hp2d2 = [], []
                     else:
-                        hp1d2 = 0
-                    if self.board[j][length - i + j] == 2:
-                        hp2d2 += 1
-                    else:
-                        hp2d2 = 0
+                        num = self.board[j][length - i + j]
+                        exec(f'hp{num}d2.append((j, length - i + j))')
+                        exec(f'hp{num % 2 + 1}d2.clear()')
 
-                if self.board[i - j][j] == 1:
-                    p1d1c += 1
+                if self.board[i - j][j] == 0:
+                    p1d1c, p2d1c = [], []
                 else:
-                    p1d1c = 0
-                if self.board[i - j][j] == 2:
-                    p2d1c += 1
-                else:
-                    p2d1c = 0
+                    num = self.board[i - j][j]
+                    exec(f"p{num}d1c.append((i - j, j))")
+                    exec(f"p{num % 2 + 1}d1c.clear()")
 
                 # вторая диагональ
-                if self.board[length - j][i - j] == 1:
-                    p1d2c += 1
+                if self.board[length - j][i - j] == 0:
+                    p1d2c, p2d2c = [], []
                 else:
-                    p1d2c = 0
-                if self.board[length - j][i - j] == 2:
-                    p2d2c += 1
-                else:
-                    p2d2c = 0
+                    num = self.board[length - j][i - j]
+                    exec(f"p{num}d2c.append((length - j, i - j))")
+                    exec(f"p{num % 2 + 1}d2c.clear()")
 
-                if (p1d1c == 5 or p1d2c) == 5 or (hp1d1 == 5 or hp1d2 == 5):
-                    self.winner('blue')
+                if (len(p1d1c) == 5 or len(p1d2c) == 5) or (len(hp1d1) == 5 or len(hp1d2) == 5):
+                    poses = max([p1d1c, p1d2c, hp1d1, hp1d2], key=lambda t: len(t))
+                    self.winner('BLUE', poses)
                     return
-                elif (p2d1c == 5 or p2d2c) == 5 or (hp2d1 == 5 or hp2d2 == 5):
-                    self.winner('red')
+                elif (len(p2d1c) == 5 or len(p2d2c) == 5)\
+                        or (len(hp2d1) == 5 or len(hp2d2) == 5):
+                    poses = max([p2d1c, p2d2c, hp2d1, hp2d2], key=lambda t: len(t))
+                    self.winner('RED', poses)
                     return
 
 
 #########################################################################
 #########################################################################
 #########################################################################
+
+
+class RedChip(pygame.sprite.Sprite):
+    game_chip = load_image('img/red1.png')
+    win_chip = load_image('img/red2.png')
+
+    def __init__(self, *group):
+        super().__init__(*group)
+        self.image = RedChip.game_chip
+        self.rect = self.image.get_rect()
+
+    def update(self, *args):
+        if args and type(args[0]) == tuple and self.rect.collidepoint(args[0]):
+            self.image = RedChip.win_chip
 
 
 class BlueChip(pygame.sprite.Sprite):
-    game_chip = load_image('img/red1.png')
-    win_chip = load_image('img/red2.png')
+    game_chip = load_image('img/blue1.png')
+    win_chip = load_image('img/blue2.png')
 
     def __init__(self, *group):
         super().__init__(*group)
         self.image = BlueChip.game_chip
         self.rect = self.image.get_rect()
 
-
-class RedChip(pygame.sprite.Sprite):
-    game_chip = load_image('img/blue1.png')
-    win_chip = load_image('img/blue2.png')
-
-    def __init__(self, *group):
-        super().__init__(*group)
-        self.image = RedChip.game_chip
-        self.rect = self.image.get_rect()
+    def update(self, *args):
+        if args and type(args[0]) == tuple and self.rect.collidepoint(args[0]):
+            self.image = BlueChip.win_chip
 
 
 #########################################################################

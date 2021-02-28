@@ -35,6 +35,7 @@ def main():
     while game_running:
         # изображение на заднем фоне
         renju_screen.blit(background, (0, 0))
+        board.set_screen(renju_screen)
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 game_running = False
