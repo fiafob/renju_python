@@ -14,11 +14,12 @@ PNUM = 3  # количество разных моделей планет каж
 PXS = 41  # допустимое значение фишки
 
 
+#  открывает изображение
 def load_image(name, colorkey=None):
     pygame.init()
     pygame.display.set_caption("Рэндзю")
-    # без этой строки ничего не работает, но она сама ничего не делает
-    renju_screen = pygame.display.set_mode(SIZE)
+    # без этой строки ничего не работает
+    pygame.display.set_mode(SIZE)
 
     fullname = os.path.join("data", name)
     if not os.path.isfile(fullname):
@@ -34,10 +35,6 @@ def load_image(name, colorkey=None):
     return image
 
 
-# Очень сырой вариант : крестики-нолики вместо фишек // поле накладывается одно поверх другого
-# какие-то границы есть стремные.
-#
-# Стоит добавить функцию, которая возвращает количество пикселей, которое занимает поле
 class Board:
     # создание поля
     def __init__(self, width, height):
@@ -56,7 +53,8 @@ class Board:
         self.p1 = 0
         self.p2 = 0
 
-        # rv - right version
+        # rv - right version. Помогает при создании определенных вещей,
+        # которые думают что находятся в поле 14х14
         self.rvx = self.get_size()[0] - self.cell_size
         self.rvy = self.get_size()[1] - self.cell_size
 
@@ -70,12 +68,11 @@ class Board:
         self.top = top
         self.cell_size = cell_size
 
-        # rv - right version
         self.rvx = self.get_size()[0] - self.cell_size
         self.rvy = self.get_size()[1] - self.cell_size
 
     def render(self, screen):
-        # k - коэффицент толщины рамки
+        # k - коэффицент толщины (рамки, фигур)
         k = 3
 
         self.help_rect(screen)
@@ -101,27 +98,17 @@ class Board:
                     pygame.draw.line(surf, color, (self.left, cy + shadow_k * k),
                                      (self.rvx + self.left, cy + k * shadow_k), width=k)
 
-                cross_x = cx - self.left
-                cross_y = cy - self.top
-                # HUYNYA
                 if elem == 1:
-                    # chipb = BlueChip(self.chip_group)
-                    # chipb.rect.x = cross_x + k - 1
-                    # chipb.rect.y = cross_y + k - 1
                     ...
-
                 elif elem == 2:
                     ...
-                    # chipr = RedChip(self.chip_group)
-                    # chipr.rect.x = cross_x + k - 1
-                    # chipr.rect.y = cross_y + k - 1
 
                 cx += self.cell_size
             cy += self.cell_size
         # 4 точки, пока не знаю для чего они
         for k in range(1, 9, 7):
             pygame.draw.circle(surf, COLOR, (3 * self.cell_size + self.left + 1,
-                                               (3 + k) * self.cell_size + self.top + 1), 8)
+                                             (3 + k) * self.cell_size + self.top + 1), 8)
             pygame.draw.circle(surf, COLOR,
                                (self.get_size()[0] + self.left - self.cell_size * 4 + 1,
                                 (3 + k) * self.cell_size + self.top + 1), 8)
@@ -130,6 +117,7 @@ class Board:
 
     # Полупрозрачный квадрат, будет работать до 3 хода, помогает понять, где ходить
     def help_rect(self, screen):
+        # создаю отдельную поверхность, где рисую поле
         surf = pygame.surface.Surface(SIZE, pygame.SRCALPHA)
         width, height = self.get_size()
         color = pygame.Color(200, 170, 0, 50)
@@ -148,7 +136,6 @@ class Board:
                                            (5 * self.cell_size, 5 * self.cell_size)))
         screen.blit(surf, (0, 0))
 
-    # Возможно это в итоге не пригодится, но сейчас это нужно чтобы понимать как работает игра
     # Отображает цифры и буквы
     def nums_letts(self, screen):
         font = pygame.font.Font(FONT, 2 * RC)
@@ -167,25 +154,24 @@ class Board:
     #############################################################################################
 
     def hud(self, screen):
+        # показывает кто ходит в верхнем правом углу
         if self.turn == 2:
-
-            txt_clr = pygame.Color(100, 0, 0)
+            txt_clr = pygame.Color(150, 0, 0)
             font = pygame.font.Font(FONT, int(2.5 * RC))
             text = font.render("RED  TURN", True, txt_clr)
-            screen.blit(text, (self.get_size()[0] + 1.3 * self.cell_size + PXS - 4,
+            screen.blit(text, (self.get_size()[0] + 1.3 * self.cell_size,
                                self.top))
         else:
 
             txt_clr = pygame.Color(0, 0, 170)
             font = pygame.font.Font(FONT, int(2.5 * RC))
             text = font.render("BLUE  TURN", True, txt_clr)
-            screen.blit(text, (self.get_size()[0] + 1.3 * self.cell_size + PXS - 4,
+            screen.blit(text, (self.get_size()[0] + 1.3 * self.cell_size,
                                self.top))
 
         self.button(screen)
 
     def button(self, screen):
-        #
         btn_clr = pygame.Color(200, 170, 0)
         txt_clr = pygame.Color(240, 240, 240)
         font = pygame.font.Font(FONT, 2 * RC)
@@ -235,40 +221,155 @@ class Board:
         self.board = [[0] * self.width for _ in range(self.height)]
         self.p1, self.p2 = 0, 0
         self.turn = 1
+
     #############################################################################################
     #############################################################################################
 
     def get_cell(self, mouse_pos):
         # она определяет точку в поле 16x16, где одна клетка является переврестием
-        if (mouse_pos[0] in range(0, self.width * (self.cell_size + 1))) and \
-                (mouse_pos[1] in range(0, self.height * (self.cell_size + 1))):
-            return ((mouse_pos[0]) // (self.cell_size + 1),
-                    (mouse_pos[1]) // (self.cell_size + 1))
+        if (mouse_pos[0] in range(0, int(self.width * self.cell_size))) and \
+                (mouse_pos[1] in range(0, int(self.height * self.cell_size))):
+
+            r = (mouse_pos[0]) // self.cell_size, (mouse_pos[1]) // self.cell_size
+            print(r)
+
+            return ((mouse_pos[0]) // self.cell_size,
+                    (mouse_pos[1]) // self.cell_size)
         else:
             return None
 
     # обрабатывает что делать при нажатии
     def on_click(self, cell_coords):
         if cell_coords is not None:
-            # здесь, 2 = k - 1| (k - коэфицент толщины)
+            # здесь, 2 = k - 1 | (k - коэфицент толщины)
             nx, ny = cell_coords
             if self.board[ny][nx] == 0:
+                # правила для первых ходов
+                if (self.p1 + self.p2 == 0) and (cell_coords != (7, 7)):
+                    return
+                elif (self.p1 + self.p2 == 1) and (nx not in range(7, 9) or ny != 6):
+                    return
+                elif (self.p1 + self.p2 == 2) \
+                        and (nx not in range(5, 10) or ny not in range(5, 10)):
+                    return
+
                 if self.turn == 1:
                     self.p1 += 1
                     chip = RedChip(self.chip_group)
-                    chip.rect.x = nx * self.cell_size + 2
+                    chip.rect.x = nx * self.cell_size + 3
                     chip.rect.y = ny * self.cell_size + 2
 
                 elif self.turn == 2:
                     self.p2 += 1
                     chip = BlueChip(self.chip_group)
-                    chip.rect.x = nx * self.cell_size + 2
+                    chip.rect.x = nx * self.cell_size + 3
                     chip.rect.y = ny * self.cell_size + 2
                 # если поле пустое, ему передается значение игрока, который ходит
                 self.board[ny][nx] = self.turn
                 self.turn = self.turn % 2 + 1
 
-        print(cell_coords)
+                # проверка, выиграл ли кто-нибудь
+                self.win_check()
+
+    def win_check(self):
+        p1hcount, p2hcount = 1, 1
+        p1vcount, p2vcount = 1, 1
+
+        # horizontal/vertical check
+        # т.к. доска 15х15, т.е. квадратная, можно сразу проверить и вертикально и горизонтально
+        # проверка работает только на нижнюю половину доски,
+        # поэтому нужно проверить и вторую часть
+        for x in range(self.height):
+            for y in range(self.width - 1):
+                if (p1hcount == 5 or p2hcount == 5) or \
+                        (p1vcount == 5 or p2vcount == 5):
+                    # self.update_desk()
+                    print('vert/hor win')
+                    return
+
+                if self.board[x][y] == 1:
+                    if self.board[x][y + 1] == 1:
+                        p1hcount += 1
+                    else:
+                        p1hcount = 1
+                elif self.board[x][y] == 2:
+                    if self.board[x][y] == 2 and self.board[x][y + 1] == 2:
+                        p2hcount += 1
+                    else:
+                        p2hcount = 1
+
+                if self.board[y][x] == 1:
+                    if self.board[y + 1][x] == 1:
+                        p1vcount += 1
+                    else:
+                        p1vcount = 1
+                elif self.board[y][x] == 2:
+                    if self.board[y + 1][x] == 2:
+                        p2vcount += 1
+                    else:
+                        p2vcount = 1
+
+        # diag
+        for i in range(self.height):
+            length = self.height - 1
+            # счет по диагонали
+            p1d1c, p2d1c = 0, 0
+            p1d2c, p2d2c = 0, 0
+            # счет на вторую половину
+            hp1d1, hp2d1 = 0, 0
+            hp1d2, hp2d2 = 0, 0
+
+            for j in range(i + 1):
+                if i < self.height // 2:
+                    if self.board[length - i + j][length - j] == 1:
+                        hp1d1 += 1
+                    else:
+                        hp1d1 = 0
+                    if self.board[length - i + j][length - j] == 2:
+                        hp2d1 += 1
+                    else:
+                        hp2d1 = 0
+
+                    if self.board[length - j][i - j] == 1:
+                        p1d2c += 1
+                    else:
+                        p1d2c = 0
+                    if self.board[length - j][i - j] == 2:
+                        p2d2c += 1
+                    else:
+                        p2d2c = 0
+
+                    if self.board[j][length - i + j] == 1:
+                        hp1d2 += 1
+                    else:
+                        hp1d2 = 0
+                    if self.board[j][length - i + j] == 2:
+                        hp2d2 += 1
+                    else:
+                        hp2d2 = 0
+
+                if self.board[i - j][j] == 1:
+                    p1d1c += 1
+                else:
+                    p1d1c = 0
+                if self.board[i - j][j] == 2:
+                    p2d1c += 1
+                else:
+                    p2d1c = 0
+                if (p1d1c == 5 or p2d1c == 5) or (p1d2c == 5 or p2d2c == 5) or\
+                        (hp1d1 == 5 or hp2d1 == 5) or (hp1d2 == 5 or hp2d2 == 5):
+                    print('diag win')
+                    return
+
+                # вторая диагональ
+                if self.board[length - j][i - j] == 1:
+                    p1d2c += 1
+                else:
+                    p1d2c = 0
+                if self.board[length - j][i - j] == 2:
+                    p2d2c += 1
+                else:
+                    p2d2c = 0
 
     # функция для основной программы можно сказать, чтобы сразу срабатывало
     def get_click(self, mouse_pos):
@@ -288,7 +389,6 @@ class Board:
 #########################################################################
 
 
-# класс фишки, т.к. я думаю с ней придется много работать
 class BlueChip(pygame.sprite.Sprite):
     game_chip = load_image('img/red1.png')
     win_chip = load_image('img/red2.png')

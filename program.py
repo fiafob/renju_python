@@ -1,7 +1,4 @@
 # Короче, тут будет сама игра, а классы в отдельном файле
-import os
-import sys
-
 import pygame as pg
 
 from classes import Board, BackgroundBlink, load_image
