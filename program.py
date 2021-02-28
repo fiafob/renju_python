@@ -8,6 +8,7 @@ RC = 15  # renju_cells
 STARS = 25
 CHANGE_BACKGROUND = pg.USEREVENT + 1
 DARKNESS_TICK = CHANGE_BACKGROUND + 1
+WINNER_CONGRATULATIONS = DARKNESS_TICK + 1
 
 # Инициализация и настройка окна с самой игрой
 renju_screen = pg.display.set_mode(SIZE)
@@ -33,6 +34,8 @@ def main():
     pg.time.set_timer(DARKNESS_TICK, 6000 // 200)
 
     while game_running:
+        if board.time >= 6000 // 150:
+            pg.time.set_timer(WINNER_CONGRATULATIONS, 0)
         # изображение на заднем фоне
         renju_screen.blit(background, (0, 0))
         board.set_screen(renju_screen)
@@ -52,6 +55,8 @@ def main():
                         board.get_click(event.pos)
                     timer = 0
                 board.button_click(event.pos, 'up')
+                if board.win:
+                    pg.time.set_timer(WINNER_CONGRATULATIONS, 150)
 
             elif event.type == pg.MOUSEMOTION:
                 board.button_check(event.pos)
@@ -61,6 +66,9 @@ def main():
 
             elif event.type == DARKNESS_TICK:
                 bg.change_darkness()
+
+            elif event.type == WINNER_CONGRATULATIONS:
+                board.congrats_wnr()
 
         if timer != 0:
             timer += dt

@@ -62,9 +62,19 @@ class Board:
         self.shdwK = 30
         self.button_clicked = False
 
+        # все действия выполняются после победы
         # переменная блокирует нажатия на поле, чтобы не поставили фишки
+        # не знаю как раньше обходилось без переменной screen
+        # подебитель становится цветом (RED|BLUE)
+        # индекс нужен, чтобы красиво отобразить победителя
+        # стоп нужен, чтобы прекратился счетчик
+        # time нужен, чтобы текст исчез через 6 секунд
         self.win = False
         self.screen = None
+        self.da_best_player = ""
+        self.player_ind = 0
+        self.stop = False
+        self.time = 0
 
     def set_screen(self, screen):
         self.screen = screen
@@ -105,11 +115,6 @@ class Board:
                     pygame.draw.line(surf, color, (self.left, cy + shadow_k * k),
                                      (self.rvx + self.left, cy + k * shadow_k), width=k)
 
-                if elem == 1:
-                    ...
-                elif elem == 2:
-                    ...
-
                 cx += self.cell_size
             cy += self.cell_size
         # 4 точки, пока не знаю для чего они
@@ -121,6 +126,17 @@ class Board:
                                 (3 + k) * self.cell_size + self.top + 1), 8)
         screen.blit(surf, (0, 0))
         self.chip_group.draw(screen)
+
+        if self.win and self.player_ind > 0:
+            word = self.da_best_player + "  WINS"
+            if self.player_ind <= len(word):
+                font = pygame.font.Font(FONT, 3 * self.cell_size)
+                text = font.render(word[:self.player_ind], True, pygame.Color(self.da_best_player))
+                self.screen.blit(text, (WIDTH - (10 + self.player_ind) * self.cell_size
+                                        , HEIGHT // 2.5))
+            else:
+                self.player_ind = len(word)
+                self.stop = True
 
     # Полупрозрачный квадрат, будет работать до 3 хода, помогает понять, где ходить
     def help_rect(self, screen):
@@ -230,6 +246,10 @@ class Board:
         self.p1, self.p2 = 0, 0
         self.turn = 1
         self.win = False
+        self.stop = False
+        self.player_ind = 0
+        self.da_best_player = ""
+        self.time = 0
 
     #############################################################################################
     #############################################################################################
@@ -295,10 +315,18 @@ class Board:
     def winner(self, player, coords):
         print("winner", player)
         print(coords)
+        self.da_best_player = player
         self.win = True
         for coord in coords:
             coord = coord[1] * self.cell_size + self.left, coord[0] * self.cell_size + self.top
             self.chip_group.update(coord)
+
+    def congrats_wnr(self):
+        if not self.stop:
+            self.player_ind += 1
+        self.time += 1
+        if self.time >= 6000 // 150:
+            self.player_ind = 0
 
     ########################################################################
 
