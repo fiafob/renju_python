@@ -62,6 +62,9 @@ class Board:
         self.shdwK = 30
         self.button_clicked = False
 
+        # переменная блокирует нажатия на поле, чтобы не поставили фишки
+        self.win = False
+
     # настройка внешнего вида
     def set_view(self, left, top, cell_size):
         self.left = left
@@ -217,10 +220,11 @@ class Board:
                 self.update_desk()
 
     def update_desk(self):
-        self.chip_group = pygame.sprite.Group()
+        self.chip_group = pygame.sprite.Group.empty
         self.board = [[0] * self.width for _ in range(self.height)]
         self.p1, self.p2 = 0, 0
         self.turn = 1
+        self.win = False
 
     #############################################################################################
     #############################################################################################
@@ -271,20 +275,36 @@ class Board:
                 # проверка, выиграл ли кто-нибудь
                 self.win_check()
 
+    # функция для основной программы можно сказать, чтобы сразу срабатывало
+    def get_click(self, mouse_pos):
+
+        cell = self.get_cell(mouse_pos)
+        self.on_click(cell)
+
+    # возвращает размер доски в пикселях
+    def get_size(self):
+        return self.cell_size * self.width, self.cell_size * self.height
+    ########################################################################
+
+    def winner(self, player, coord):
+        print("winner", player)
+        self.win = True
+
     def win_check(self):
         p1hcount, p2hcount = 1, 1
         p1vcount, p2vcount = 1, 1
 
         # horizontal/vertical check
         # т.к. доска 15х15, т.е. квадратная, можно сразу проверить и вертикально и горизонтально
-        # проверка работает только на нижнюю половину доски,
-        # поэтому нужно проверить и вторую часть
         for x in range(self.height):
             for y in range(self.width - 1):
-                if (p1hcount == 5 or p2hcount == 5) or \
-                        (p1vcount == 5 or p2vcount == 5):
-                    # self.update_desk()
-                    print('vert/hor win')
+                if p1hcount == 5 or p1vcount == 5:
+                    poses = max([p1hcount, p1vcount], key=lambda t: len(t))
+                    self.winner("blue", poses)
+                    return
+                if p2hcount == 5 or p2vcount == 5:
+                    poses = max([p2vcount, p2hcount], key=lambda t: len(t))
+                    self.winner("red", poses)
                     return
 
                 if self.board[x][y] == 1:
@@ -293,7 +313,7 @@ class Board:
                     else:
                         p1hcount = 1
                 elif self.board[x][y] == 2:
-                    if self.board[x][y] == 2 and self.board[x][y + 1] == 2:
+                    if self.board[x][y + 1] == 2:
                         p2hcount += 1
                     else:
                         p2hcount = 1
@@ -310,6 +330,8 @@ class Board:
                         p2vcount = 1
 
         # diag
+        # проверка работает только на нижнюю половину доски,
+        # поэтому нужно проверить и вторую часть
         for i in range(self.height):
             length = self.height - 1
             # счет по диагонали
@@ -320,7 +342,7 @@ class Board:
             hp1d2, hp2d2 = 0, 0
 
             for j in range(i + 1):
-                if i < self.height - 1:
+                if i < length:
                     if self.board[length - i + j][length - j] == 1:
                         hp1d1 += 1
                     else:
@@ -358,22 +380,12 @@ class Board:
                 else:
                     p2d2c = 0
 
-                if (p1d1c == 5 or p2d1c == 5) or (p1d2c == 5 or p2d2c == 5) or\
-                        (hp1d1 == 5 or hp2d1 == 5) or (hp1d2 == 5 or hp2d2 == 5):
-                    print('diag win')
+                if (p1d1c == 5 or p1d2c) == 5 or (hp1d1 == 5 or hp1d2 == 5):
+                    self.winner('blue')
                     return
-
-    # функция для основной программы можно сказать, чтобы сразу срабатывало
-    def get_click(self, mouse_pos):
-
-        cell = self.get_cell(mouse_pos)
-        self.on_click(cell)
-
-    ########################################################################
-
-    # возвращает размер доски в пикселях
-    def get_size(self):
-        return self.cell_size * self.width, self.cell_size * self.height
+                elif (p2d1c == 5 or p2d2c) == 5 or (hp2d1 == 5 or hp2d2 == 5):
+                    self.winner('red')
+                    return
 
 
 #########################################################################

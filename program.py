@@ -10,8 +10,6 @@ CHANGE_BACKGROUND = pg.USEREVENT + 1
 DARKNESS_TICK = CHANGE_BACKGROUND + 1
 
 # Инициализация и настройка окна с самой игрой
-# pg.init()
-# pg.display.set_caption("Рендзю")
 renju_screen = pg.display.set_mode(SIZE)
 
 
@@ -49,7 +47,8 @@ def main():
                 if timer == 0:
                     timer = 0.001
                 elif timer < 0.3:
-                    board.get_click(event.pos)
+                    if not board.win:
+                        board.get_click(event.pos)
                     timer = 0
                 board.button_click(event.pos, 'up')
 
