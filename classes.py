@@ -320,7 +320,7 @@ class Board:
             hp1d2, hp2d2 = 0, 0
 
             for j in range(i + 1):
-                if i < self.height // 2:
+                if i < self.height - 1:
                     if self.board[length - i + j][length - j] == 1:
                         hp1d1 += 1
                     else:
@@ -329,15 +329,6 @@ class Board:
                         hp2d1 += 1
                     else:
                         hp2d1 = 0
-
-                    if self.board[length - j][i - j] == 1:
-                        p1d2c += 1
-                    else:
-                        p1d2c = 0
-                    if self.board[length - j][i - j] == 2:
-                        p2d2c += 1
-                    else:
-                        p2d2c = 0
 
                     if self.board[j][length - i + j] == 1:
                         hp1d2 += 1
@@ -356,10 +347,6 @@ class Board:
                     p2d1c += 1
                 else:
                     p2d1c = 0
-                if (p1d1c == 5 or p2d1c == 5) or (p1d2c == 5 or p2d2c == 5) or\
-                        (hp1d1 == 5 or hp2d1 == 5) or (hp1d2 == 5 or hp2d2 == 5):
-                    print('diag win')
-                    return
 
                 # вторая диагональ
                 if self.board[length - j][i - j] == 1:
@@ -370,6 +357,11 @@ class Board:
                     p2d2c += 1
                 else:
                     p2d2c = 0
+
+                if (p1d1c == 5 or p2d1c == 5) or (p1d2c == 5 or p2d2c == 5) or\
+                        (hp1d1 == 5 or hp2d1 == 5) or (hp1d2 == 5 or hp2d2 == 5):
+                    print('diag win')
+                    return
 
     # функция для основной программы можно сказать, чтобы сразу срабатывало
     def get_click(self, mouse_pos):
