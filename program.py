@@ -37,6 +37,7 @@ def main():
     while game_running:
         if board.time >= 5000 // 150 or not board.win:
             pg.time.set_timer(WINNER_CONGRATULATIONS, 0)
+
         # изображение на заднем фоне
         renju_screen.blit(background, (0, 0))
         for event in pg.event.get():

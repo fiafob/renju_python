@@ -9,7 +9,7 @@ import pygame
 SIZE = WIDTH, HEIGHT = 900, 674
 RC = 15  # renju_cells
 COLOR = pygame.Color(200, 170, 0)  # тот оранжевый цвет
-FONT = 'data/font/ARCADECLASSIC.TTF'
+FONT = 'data/font/ARCADECLASSIC.TTF'  # pixel font
 PNUM = 3  # количество разных моделей планет каждого цвета
 PXS = 41  # допустимое значение фишки
 
@@ -66,11 +66,11 @@ class Board:
         self.button_clicked = False
 
         # все действия выполняются после победы
-        # переменная блокирует нажатия на поле, чтобы не поставили фишки
+        # переменная win блокирует нажатия на поле, чтобы не поставили фишки
         # не знаю как раньше обходилось без переменной screen
         # подебитель становится цветом (RED|BLUE)
         # индекс нужен, чтобы красиво отобразить победителя
-        # стоп нужен, чтобы прекратился счетчик
+        # stop нужен, чтобы прекратился счетчик
         # time нужен, чтобы текст исчез через 6 секунд
         self.win = False
         self.screen = None
@@ -105,7 +105,7 @@ class Board:
         cy = self.top
         for row in self.board:
             cx = self.left
-            for elem in row:
+            for _ in row:
                 for shadow_k in range(1, -1, -1):
                     color = pygame.Color(200, 170, 0)
                     hsv = color.hsva
@@ -120,7 +120,7 @@ class Board:
 
                 cx += self.cell_size
             cy += self.cell_size
-        # 4 точки, пока не знаю для чего они
+        # отображает 4 точки
         for k in range(1, 9, 7):
             pygame.draw.circle(surf, COLOR, (3 * self.cell_size + self.left + 1,
                                              (3 + k) * self.cell_size + self.top + 1), 8)
@@ -130,11 +130,15 @@ class Board:
         screen.blit(surf, (0, 0))
         self.chip_group.draw(screen)
 
+        # отображается при победе кого-либо
+
         word = self.da_best_player + "  WINS"
         if self.player_ind > len(word):
             self.player_ind = len(word)
             self.stop = True
         if self.win:
+            # отображает на фишках номер их хода
+            # белым для синих и черным для красных
             turn_font = pygame.font.Font(FONT, self.cell_size - 15)
             shdw_turn_font = pygame.font.Font(FONT, self.cell_size - 11)
             for coords in self.chip_coords:
@@ -160,9 +164,10 @@ class Board:
 
             if self.player_ind > 0:
                 font = pygame.font.Font(FONT, 3 * self.cell_size)
-                text = font.render(word[:self.player_ind], True, pygame.Color(self.da_best_player))
-                self.screen.blit(text, (WIDTH - (9 + self.player_ind) * self.cell_size
-                                        , HEIGHT // 2.5))
+                text = font.render(word[:self.player_ind], True,
+                                   pygame.Color(self.da_best_player))
+                self.screen.blit(text, (WIDTH - (9 + self.player_ind) * self.cell_size,
+                                        HEIGHT // 2.5))
 
     # Полупрозрачный квадрат, будет работать до 3 хода, помогает понять, где ходить
     def help_rect(self, screen):
@@ -199,9 +204,6 @@ class Board:
             screen.blit(text, (self.left // 1.5 + n * self.cell_size,
                                2 * self.top + self.rvy))
 
-    #############################################################################################
-    #############################################################################################
-
     def hud(self, screen):
         # показывает кто ходит в верхнем правом углу
         if not self.win:
@@ -221,6 +223,7 @@ class Board:
 
         self.button(screen)
 
+    # кнопка перезагрузки доски
     def button(self, screen):
         btn_clr = pygame.Color(200, 170, 0)
         txt_clr = pygame.Color(240, 240, 240)
@@ -246,6 +249,7 @@ class Board:
         text = font.render('RESTART', True, txt_clr)
         screen.blit(text, (x0 + self.cell_size // 2.4, y0 + self.cell_size // 2.5 + dy))
 
+    # проверка, нажали ли на кнопку restart
     def button_check(self, mouse_pos):
         x0 = self.get_size()[0] + 2 * self.cell_size
         y0 = HEIGHT - 2 * self.cell_size - self.top
@@ -255,6 +259,7 @@ class Board:
         else:
             self.shdwK = 30
 
+    # если на кнопку действительно нажали
     def button_click(self, mouse_pos, action):
         x0 = self.get_size()[0] + 2 * self.cell_size
         y0 = HEIGHT - 2 * self.cell_size - self.top
@@ -266,6 +271,7 @@ class Board:
                 self.button_clicked = False
                 self.update_desk()
 
+    # обновляет данные при начале новой партии
     def update_desk(self):
         self.chip_group = pygame.sprite.Group()
         self.board = [[0] * self.width for _ in range(self.height)]
@@ -277,9 +283,6 @@ class Board:
         self.da_best_player = ""
         self.time = 0
         self.chip_coords.clear()
-
-    #############################################################################################
-    #############################################################################################
 
     def get_cell(self, mouse_pos):
         # она определяет точку в поле 16x16, где одна клетка является переврестием
@@ -342,6 +345,7 @@ class Board:
     # возвращает размер доски в пикселях
     def get_size(self):
         return self.cell_size * self.width, self.cell_size * self.height
+
     ########################################################################
     ########################################################################
 
@@ -350,7 +354,8 @@ class Board:
         self.da_best_player = player
         self.win = True
         for coord in coords:
-            coord = coord[1] * self.cell_size + self.left, coord[0] * self.cell_size + self.top
+            coord = coord[1] * self.cell_size + self.left, \
+                    coord[0] * self.cell_size + self.top
             self.chip_group.update(coord)
 
     def congrats_wnr(self):
@@ -364,7 +369,8 @@ class Board:
 
     def win_check(self):
         # horizontal/vertical check
-        # т.к. доска 15х15, т.е. квадратная, можно сразу проверить и вертикально и горизонтально
+        # т.к. доска 15х15, т.е. квадратная,
+        # можно сразу проверить и вертикально и горизонтально
         for x in range(self.height):
             p1hcount, p2hcount = [], []
             p1vcount, p2vcount = [], []
@@ -439,7 +445,7 @@ class Board:
                     poses = max([p1d1c, p1d2c, hp1d1, hp1d2], key=lambda t: len(t))
                     self.winner('BLUE', poses)
                     return
-                elif (len(p2d1c) == 5 or len(p2d2c) == 5)\
+                elif (len(p2d1c) == 5 or len(p2d2c) == 5) \
                         or (len(hp2d1) == 5 or len(hp2d2) == 5):
                     poses = max([p2d1c, p2d2c, hp2d1, hp2d2], key=lambda t: len(t))
                     self.winner('RED', poses)
