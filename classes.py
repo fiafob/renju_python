@@ -259,10 +259,6 @@ class Board:
         # она определяет точку в поле 16x16, где одна клетка является переврестием
         if (mouse_pos[0] in range(0, int(self.width * self.cell_size))) and \
                 (mouse_pos[1] in range(0, int(self.height * self.cell_size))):
-
-            r = (mouse_pos[0]) // self.cell_size, (mouse_pos[1]) // self.cell_size
-            print(r)
-
             return ((mouse_pos[0]) // self.cell_size,
                     (mouse_pos[1]) // self.cell_size)
         else:
@@ -315,7 +311,6 @@ class Board:
     ########################################################################
 
     def winner(self, player, coords):
-        print("winner", player)
         self.da_best_player = player
         self.win = True
         for coord in coords:

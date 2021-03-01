@@ -84,6 +84,6 @@ def main():
     pg.quit()
 
 
-background = load_image("img/bg.png")
+background = load_image("img/BackGround.png")
 background = pg.transform.scale(background, (int(1920 // 1.5), int(1080 // 1.5)))
 main()
