@@ -47,6 +47,9 @@ class Board:
         self.cell_size = 30
         self.chip_group = pygame.sprite.Group()
 
+        # содержит координаты фишек и номер их хода
+        self.chip_coords = []
+
         # turn - определяет кто сейчас ходит. 1 - blue, 2 - red
         # p1 | p2 - player1 | player2 - сколько ходов сделал игрок
         self.turn = 1
@@ -127,16 +130,39 @@ class Board:
         screen.blit(surf, (0, 0))
         self.chip_group.draw(screen)
 
-        if self.win and self.player_ind > 0:
-            word = self.da_best_player + "  WINS"
-            if self.player_ind <= len(word):
+        word = self.da_best_player + "  WINS"
+        if self.player_ind > len(word):
+            self.player_ind = len(word)
+            self.stop = True
+        if self.win:
+            turn_font = pygame.font.Font(FONT, self.cell_size - 15)
+            shdw_turn_font = pygame.font.Font(FONT, self.cell_size - 11)
+            for coords in self.chip_coords:
+                # coord - координаты фишки| age - номер хода
+                coord, age, turn = coords
+                shadow = (str(age), True, pygame.Color((0, 0, 0)))
+                dig = (str(age), True, pygame.Color((255, 255, 255)))
+
+                if age < 10:
+                    coord = coord[0] + int(PXS // 3), coord[1] + 4
+                else:
+                    coord = coord[0] + int(PXS // 3 - 9), coord[1] + 4
+
+                if turn == 1:
+                    shadow, dig = dig, shadow
+
+                num = shdw_turn_font.render(*shadow)
+                norm_num = turn_font.render(*dig)
+
+                # self.screen.blit(num, (coord[0] - 2, coord[1] - 4))
+                self.screen.blit(num, coord)
+                self.screen.blit(norm_num, coord)
+
+            if self.player_ind > 0:
                 font = pygame.font.Font(FONT, 3 * self.cell_size)
                 text = font.render(word[:self.player_ind], True, pygame.Color(self.da_best_player))
-                self.screen.blit(text, (WIDTH - (10 + self.player_ind) * self.cell_size
+                self.screen.blit(text, (WIDTH - (9 + self.player_ind) * self.cell_size
                                         , HEIGHT // 2.5))
-            else:
-                self.player_ind = len(word)
-                self.stop = True
 
     # Полупрозрачный квадрат, будет работать до 3 хода, помогает понять, где ходить
     def help_rect(self, screen):
@@ -250,6 +276,7 @@ class Board:
         self.player_ind = 0
         self.da_best_player = ""
         self.time = 0
+        self.chip_coords.clear()
 
     #############################################################################################
     #############################################################################################
@@ -272,6 +299,8 @@ class Board:
         if cell_coords is not None:
             # здесь, 2 = k - 1 | (k - коэфицент толщины)
             nx, ny = cell_coords
+            # coords нужна, чтобы передать в chip_coords координаты хода
+            coords = None
             if self.board[ny][nx] == 0:
                 # правила для первых ходов
                 if (self.p1 + self.p2 == 0) and (cell_coords != (7, 7)):
@@ -281,20 +310,24 @@ class Board:
                 elif (self.p1 + self.p2 == 2) \
                         and (nx not in range(5, 10) or ny not in range(5, 10)):
                     return
-
                 if self.turn == 2:
                     self.p1 += 1
                     chip = RedChip(self.chip_group)
                     chip.rect.x = nx * self.cell_size + 3
                     chip.rect.y = ny * self.cell_size + 2
+                    coords = chip.rect
 
                 elif self.turn == 1:
                     self.p2 += 1
                     chip = BlueChip(self.chip_group)
                     chip.rect.x = nx * self.cell_size + 3
                     chip.rect.y = ny * self.cell_size + 2
+                    coords = chip.rect
                 # если поле пустое, ему передается значение игрока, который ходит
                 self.board[ny][nx] = self.turn
+
+                self.chip_coords.append((coords, self.p1 + self.p2, self.turn))
+
                 self.turn = self.turn % 2 + 1
 
                 # проверка, выиграл ли кто-нибудь
@@ -314,7 +347,6 @@ class Board:
 
     def winner(self, player, coords):
         print("winner", player)
-        print(coords)
         self.da_best_player = player
         self.win = True
         for coord in coords:
@@ -325,7 +357,7 @@ class Board:
         if not self.stop:
             self.player_ind += 1
         self.time += 1
-        if self.time >= 6000 // 150:
+        if self.time >= 5000 // 150:
             self.player_ind = 0
 
     ########################################################################

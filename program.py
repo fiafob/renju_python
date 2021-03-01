@@ -27,6 +27,7 @@ def main():
     cell_size = HEIGHT // (RC + 1)
     board = Board(RC, RC)
     board.set_view(cell_size // 2, cell_size // 2, (HEIGHT - cell_size) // RC)
+    board.set_screen(renju_screen)
 
     # для заднего фона
     bg = BackgroundBlink(STARS)
@@ -34,11 +35,10 @@ def main():
     pg.time.set_timer(DARKNESS_TICK, 6000 // 200)
 
     while game_running:
-        if board.time >= 6000 // 150:
+        if board.time >= 5000 // 150 or not board.win:
             pg.time.set_timer(WINNER_CONGRATULATIONS, 0)
         # изображение на заднем фоне
         renju_screen.blit(background, (0, 0))
-        board.set_screen(renju_screen)
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 game_running = False
